@@ -36,15 +36,8 @@ app.use('/api', (err: any, req: express.Request, res: express.Response, next: ex
   res.status(err.status || 500).json({ success: false, step: 'Global Error Handler', message: err.message || 'Internal Server Error', stack: err.stack }); 
 });
 
-// IMPORTANT: Do NOT call app.listen() here. Vercel Serverless Functions expect the raw Express app instance.
-export default app;
-
-// Disable Vercel's default body parser so Multer and Express can parse the raw stream
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 // Increase Vercel timeout to 60 seconds for slow LLM operations (Hobby Tier max)
 export const maxDuration = 60;
+
+// IMPORTANT: Do NOT call app.listen() here. Vercel expects the raw Express app instance.
+export default app;
