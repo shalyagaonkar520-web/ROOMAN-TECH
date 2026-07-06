@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BrainCircuit, History, Moon, Sun, LogIn, LogOut } from 'lucide-react';
+import { BrainCircuit, History, Moon, Sun, LogIn, LogOut, Laptop } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
