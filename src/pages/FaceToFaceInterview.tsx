@@ -623,7 +623,17 @@ export default function FaceToFaceInterview() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    if (isSTTListening) return;
+    // Abort any existing instance and clear handlers to avoid duplicate callbacks/race conditions
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
 
     const rec = new SpeechRecognition();
     rec.continuous = true;
@@ -632,7 +642,6 @@ export default function FaceToFaceInterview() {
 
     rec.onstart = () => {
       setIsSTTListening(true);
-      setCandidateSubtitle('');
       lastSpeechTimeRef.current = Date.now();
       setSilenceCountdown(null);
     };
@@ -653,18 +662,38 @@ export default function FaceToFaceInterview() {
       }
       const updatedText = finalTranscript || interimTranscript;
       setCandidateSubtitle(updatedText);
-      setAnswer(prev => {
-        const currentAnswer = (prev + finalTranscript).trim();
-        const fillersFound = (updatedText.toLowerCase().match(/\b(uh|um|like|basically|actually)\b/g) || []).length;
-        if (fillersFound > 0) {
-          setMetrics(m => ({ ...m, fillers: m.fillers + fillersFound }));
-        }
-        return currentAnswer;
-      });
+      
+      if (finalTranscript) {
+        setAnswer(prev => {
+          const currentAnswer = (prev + finalTranscript).trim();
+          const fillersFound = (updatedText.toLowerCase().match(/\b(uh|um|like|basically|actually)\b/g) || []).length;
+          if (fillersFound > 0) {
+            setMetrics(m => ({ ...m, fillers: m.fillers + fillersFound }));
+          }
+          return currentAnswer;
+        });
+      }
+
+      // Check if candidate says "I am finished" or "I'm finished" or "Finished" or "I'm done"
+      const lowerText = updatedText.toLowerCase().trim();
+      if (
+        lowerText.endsWith("i'm finished") ||
+        lowerText.endsWith("im finished") ||
+        lowerText.endsWith("i am finished") ||
+        lowerText.endsWith("finished") ||
+        lowerText.endsWith("i'm done") ||
+        lowerText.endsWith("im done") ||
+        lowerText.endsWith("i am done")
+      ) {
+        handleSubmitResponse(false);
+      }
     };
 
-    rec.onerror = () => {
-      setIsSTTListening(false);
+    rec.onerror = (event: any) => {
+      console.warn("Speech recognition error:", event.error);
+      if (event.error === 'not-allowed') {
+        setIsSTTListening(false);
+      }
     };
 
     rec.onend = () => {
@@ -676,15 +705,24 @@ export default function FaceToFaceInterview() {
   };
 
   const stopSpeechRecognition = () => {
-    if (recognitionRef.current && isSTTListening) {
-      recognitionRef.current.stop();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+      setIsSTTListening(false);
     }
   };
 
 
   // 10. Submit Answer
   const handleSubmitResponse = async (forceNext = false) => {
-    if (!answer.trim() && !forceNext) return;
+    let cleanAnswer = answer.trim();
+    // Strip trailing finish commands
+    cleanAnswer = cleanAnswer.replace(/(i'm finished|im finished|i am finished|finished|i'm done|im done|i am done)[\s.]*$/gi, '').trim();
+
+    if (!cleanAnswer && !forceNext) {
+      cleanAnswer = "No response provided.";
+    }
     
     stopSpeechRecognition();
     setIsSubmitting(true);
@@ -692,8 +730,8 @@ export default function FaceToFaceInterview() {
     window.speechSynthesis.cancel();
 
     // Transcript Quality Intelligence check
-    const wordCount = answer.trim().split(/\s+/).filter(w => w.length > 0).length;
-    if (!forceNext && wordCount < 4) {
+    const wordCount = cleanAnswer.split(/\s+/).filter(w => w.length > 0).length;
+    if (!forceNext && wordCount < 4 && cleanAnswer !== "No response provided.") {
        const phrases = [
          "I couldn't hear you clearly. Could you please repeat that?",
          "Could you please speak a little louder? I missed some words.",
@@ -707,7 +745,6 @@ export default function FaceToFaceInterview() {
        setAnswer('');
        setCandidateSubtitle('');
        setIsSubmitting(false);
-       // It will automatically resume listening because speakText's onEnd calls startSpeechRecognition
        return;
     }
 
@@ -727,7 +764,7 @@ export default function FaceToFaceInterview() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          answer_text: forceNext ? "Skipped correction retry." : answer,
+          answer_text: forceNext ? "Skipped correction retry." : cleanAnswer,
           time_taken_seconds: meetingTimer - questionStartSeconds,
           force_next: forceNext
         })
@@ -791,7 +828,7 @@ export default function FaceToFaceInterview() {
           if (!completeRes.ok) throw new Error('Failed to compile report.');
           navigate(`/report/${id}`);
         } else {
-          setAnswersMap(prev => ({ ...prev, [currentQuestion.id]: answer }));
+          setAnswersMap(prev => ({ ...prev, [currentQuestion.id]: cleanAnswer }));
           setCurrentQuestion(data.next_question);
           
           const orderIdx = data.next_question.order_idx;
@@ -887,6 +924,22 @@ export default function FaceToFaceInterview() {
           <div className="text-xs font-semibold bg-white/5 border border-white/10 px-3 py-1 rounded-md text-slate-300">
             Round Limit: {interview?.num_questions || 5} questions
           </div>
+
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to exit the interview? Your progress may be lost.")) {
+                stopCamera();
+                window.speechSynthesis.cancel();
+                if (recognitionRef.current) {
+                  try { recognitionRef.current.abort(); } catch(e) {}
+                }
+                navigate('/setup');
+              }
+            }}
+            className="text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
+            Exit Interview
+          </button>
         </div>
       </div>
 
@@ -923,7 +976,7 @@ export default function FaceToFaceInterview() {
               Sarah (Interviewer)
             </span>
             <span className={`text-xs px-2.5 py-1 rounded-full font-extrabold bg-white/10 border ${theme.border} ${theme.text}`}>
-              {interview?.company || 'Google'} Style
+              {interview?.difficulty || 'Medium'} Difficulty
             </span>
           </div>
 
@@ -938,7 +991,7 @@ export default function FaceToFaceInterview() {
             
             <div>
               <h3 className="font-bold text-lg text-white">Senior Engineering Manager</h3>
-              <p className="text-slate-400 text-xs mt-0.5">{interview?.company} Tech Lead</p>
+              <p className="text-slate-400 text-xs mt-0.5">{interview?.difficulty || 'Medium'} Difficulty Scale</p>
             </div>
             
             {/* Pulsing vocal lines indicator */}
@@ -961,108 +1014,84 @@ export default function FaceToFaceInterview() {
           </div>
         </div>
 
-        {/* Right Grid: Candidate (webcam feed + Face Mesh simulation) */}
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col justify-between min-h-[420px] bg-slate-950">
+        {/* Right Grid: Candidate (webcam feed + side layout captions & metrics) */}
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 p-6 flex flex-col justify-between min-h-[420px]">
           
-          {/* Webcam stream */}
-          {cameraEnabled && !cameraError && (
-            <video 
-              ref={videoRef}
-              autoPlay 
-              playsInline 
-              muted 
-              className="absolute inset-0 w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-500"
-            />
-          )}
-
-          {/* Canvas Draw layer overlay for simulated FaceMesh */}
-          <canvas 
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10 opacity-80"
-          />
-
-          {/* Render mock UI placeholder when camera disabled */}
-          {(!cameraEnabled || cameraError) && (
-            <div className="flex flex-col items-center justify-center text-center space-y-4 z-10 p-6 absolute inset-0 bg-slate-900/60 backdrop-blur-sm">
-              <div className="w-24 h-24 rounded-full bg-slate-800 border border-slate-700/50 flex items-center justify-center shadow-lg relative">
-                <div className={`absolute inset-0 rounded-full border border-indigo-500/20 animate-ping ${isSTTListening ? 'block' : 'hidden'}`} />
-                <Mic className="w-10 h-10 text-slate-400" />
-              </div>
-              <div>
-                <h4 className="font-bold text-base text-slate-200">Candidate (You)</h4>
-                <p className="text-xs text-slate-500">Camera stream active (Wireframe mesh rendering)</p>
-              </div>
-            </div>
-          )}
-
-          {/* Overlay UI: Live vocal metrics gauges */}
-          <div className="absolute top-6 left-6 right-6 grid grid-cols-4 gap-3 z-20 pointer-events-none">
+          <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch h-full">
             
-            {/* Gauge: Confidence */}
-            <div className="bg-slate-950/85 backdrop-blur-md border border-white/5 p-3 rounded-2xl flex flex-col items-center">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold">Confidence</span>
-              <div className="flex items-baseline space-x-0.5 mt-1">
-                <span className="text-sm font-extrabold text-indigo-400">{metrics.confidence}</span>
-                <span className="text-[10px] text-slate-400">%</span>
+            {/* Left side: Video Feed Box */}
+            <div className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 min-h-[220px]">
+              {cameraEnabled && !cameraError && (
+                <video 
+                  ref={videoRef}
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className="absolute inset-0 w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-500"
+                />
+              )}
+              <canvas 
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10 opacity-80"
+              />
+              {(!cameraEnabled || cameraError) && (
+                <div className="flex flex-col items-center justify-center text-center space-y-4 absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-10">
+                  <div className="w-14 h-14 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center shadow-lg">
+                    <Mic className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-200">Candidate (You)</h4>
+                  </div>
+                </div>
+              )}
+              
+              {/* Overlay camera & mic controls at bottom of video feed */}
+              <div className="absolute bottom-3 left-3 flex space-x-2 z-20">
+                <button 
+                  onClick={() => setCameraEnabled(prev => !prev)}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center backdrop-blur-sm border border-white/10 cursor-pointer"
+                >
+                  {cameraEnabled ? <Video className="w-3.5 h-3.5" /> : <VideoOff className="w-3.5 h-3.5 text-red-400" />}
+                </button>
+                <button 
+                  onClick={() => setSpeechEnabled(prev => !prev)}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center backdrop-blur-sm border border-white/10 cursor-pointer"
+                >
+                  {speechEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-red-400" />}
+                </button>
               </div>
             </div>
 
-            {/* Gauge: Eye Contact */}
-            <div className="bg-slate-950/85 backdrop-blur-md border border-white/5 p-3 rounded-2xl flex flex-col items-center">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold">Eye Contact</span>
-              <div className="flex items-baseline space-x-0.5 mt-1">
-                <span className="text-sm font-extrabold text-cyan-400">{Math.floor(metrics.eyeContact)}</span>
-                <span className="text-[10px] text-slate-400">%</span>
+            {/* Right side: Transcribed Caption & Performance Metrics */}
+            <div className="flex flex-col justify-between space-y-4">
+              {/* Gauges Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Confidence</span>
+                  <span className="text-xs font-black text-indigo-400 mt-0.5">{metrics.confidence}%</span>
+                </div>
+                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Eye Contact</span>
+                  <span className="text-xs font-black text-cyan-400 mt-0.5">{Math.floor(metrics.eyeContact)}%</span>
+                </div>
+                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Speech Speed</span>
+                  <span className="text-xs font-black text-purple-400 mt-0.5">{metrics.wpm} WPM</span>
+                </div>
+                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Filler Words</span>
+                  <span className="text-xs font-black text-rose-400 mt-0.5">{metrics.fillers}</span>
+                </div>
+              </div>
+
+              {/* Transcribed Candidate Answer Caption */}
+              <div className="flex-1 bg-slate-950 border border-white/5 rounded-2xl p-4 flex items-center justify-center shadow-lg min-h-[120px]">
+                <p className="text-xs font-semibold text-center text-slate-300 leading-relaxed italic">
+                  {candidateSubtitle ? `You: "${candidateSubtitle}"` : "Vocal dictation active..."}
+                </p>
               </div>
             </div>
 
-            {/* Gauge: Speech Speed */}
-            <div className="bg-slate-950/85 backdrop-blur-md border border-white/5 p-3 rounded-2xl flex flex-col items-center">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold">Speech Speed</span>
-              <div className="flex items-baseline space-x-0.5 mt-1">
-                <span className="text-sm font-extrabold text-purple-400">{metrics.wpm}</span>
-                <span className="text-[9px] text-slate-400">WPM</span>
-              </div>
-            </div>
-
-            {/* Gauge: Filler Words */}
-            <div className="bg-slate-950/85 backdrop-blur-md border border-white/5 p-3 rounded-2xl flex flex-col items-center">
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold">Filler Words</span>
-              <div className="flex items-baseline space-x-0.5 mt-1">
-                <span className="text-sm font-extrabold text-rose-400">{metrics.fillers}</span>
-                <span className="text-[9px] text-slate-400">found</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Under candidate caption transcript display */}
-          <div className="p-6 w-full z-10">
-            <div className="bg-slate-950/90 backdrop-blur-md rounded-2xl p-4 border border-white/5 min-h-[90px] flex items-center justify-center shadow-lg">
-              <p className="text-sm font-semibold text-center text-slate-300 leading-relaxed italic">
-                {candidateSubtitle ? `You: "${candidateSubtitle}"` : "Vocal dictation active..."}
-              </p>
-            </div>
-          </div>
-
-          {/* Bottom left tools */}
-          <div className="absolute bottom-6 left-6 flex space-x-2 z-20">
-            <button 
-              onClick={() => setCameraEnabled(prev => {
-                if (prev) {
-                  triggerViolation('CAMERA_OFF', 'Camera is required for this interview.', true);
-                }
-                return !prev;
-              })}
-              className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm transition-all border border-white/10"
-            >
-              {cameraEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4 text-red-400" />}
-            </button>
-            <button 
-              onClick={() => setSpeechEnabled(prev => !prev)}
-              className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm transition-all border border-white/10"
-            >
-              {speechEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-red-400" />}
-            </button>
           </div>
         </div>
       </div>
@@ -1125,8 +1154,8 @@ export default function FaceToFaceInterview() {
               <Button
                 onClick={() => handleSubmitResponse(false)}
                 isLoading={isSubmitting}
-                disabled={!answer.trim() || isSubmitting}
-                className="w-full md:w-auto rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 px-8 py-3 flex items-center justify-center font-bold"
+                disabled={isSubmitting}
+                className="w-full md:w-auto rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 px-8 py-3 flex items-center justify-center font-bold cursor-pointer"
               >
                 <span>Finish Speaking & Submit</span>
                 <Send className="w-4 h-4 ml-2" />

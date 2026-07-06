@@ -30,6 +30,7 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
       messages,
       response_format: jsonMode ? { type: 'json_object' } : undefined,
       temperature,
+      max_tokens: 8000,
     });
     console.log('Step 8: Received Groq response.');
     
@@ -53,7 +54,7 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
 }
 
 export async function generateQuestions(context: any) {
-  const systemPrompt = `${QUESTION_GENERATION_PROMPT}\n\nYou MUST return a JSON object with a "questions" key containing an array of objects. Each object must match this schema exactly: { "question_text": string, "topic": string, "difficulty": string, "expected_answer": string }`;
+  const systemPrompt = `${QUESTION_GENERATION_PROMPT}\n\nYou MUST return a JSON object with a "questions" key containing an array of objects. Each object must match this schema exactly: { "question_type": string, "question_text": string, "topic": string, "difficulty": string, "options": string[], "expected_answer": string }`;
 
   const text = await chatCompletion([
     { role: 'system', content: systemPrompt },

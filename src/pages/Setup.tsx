@@ -9,7 +9,10 @@ import { BrainCircuit, Settings2, AlertCircle, FileText, Upload, Briefcase, Chec
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const ROLES = [
+
   'Frontend Engineer',
   'Backend Engineer',
   'Full Stack Engineer',
@@ -49,9 +52,11 @@ type SetupForm = z.infer<typeof setupSchema>;
 
 export default function Setup() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [errorData, setErrorData] = useState<any>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [isParsingJD, setIsParsingJD] = useState(false);
+  const [resumeAtsScore, setResumeAtsScore] = useState<number | null>(null);
 
   // Automatic role detection & Loading overlays states
   const [detectedInfo, setDetectedInfo] = useState<any>(null);
@@ -94,7 +99,7 @@ export default function Setup() {
       const response = await fetch('/api/interviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, userId: user?.uid, email: user?.email })
       });
       if (!response.ok) {
         const err = await response.json();
@@ -124,8 +129,8 @@ export default function Setup() {
 
     try {
       const formData = new FormData();
-      formData.append('resume', file);
       formData.append('type', type);
+      formData.append('resume', file);
       
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -145,7 +150,9 @@ export default function Setup() {
         throw errObj;
       }
       const data = await response.json();
+      const extractedName = data.candidateName || data.candidate_name || data.name || data.CandidateName;
       const { text, role, yearsExperience, programmingLanguage, skills } = data;
+      const atsScoreVal = data.atsScore !== undefined ? data.atsScore : data.ats_score;
       
       if (type === 'resume') {
         setValue('resumeText', text);
@@ -153,6 +160,10 @@ export default function Setup() {
         if (yearsExperience) setValue('yearsExperience', yearsExperience);
         if (programmingLanguage) setValue('programmingLanguage', programmingLanguage);
         if (skills) setValue('skills', skills);
+        if (extractedName) setValue('candidateName', extractedName);
+        if (atsScoreVal !== undefined && atsScoreVal !== null) {
+          setResumeAtsScore(Number(atsScoreVal));
+        }
 
         if (watch('jdText') || watch('mode') === 'face_to_face') {
           setDetectedInfo({
@@ -250,6 +261,13 @@ export default function Setup() {
                   {isParsingResume ? 'Parsing...' : resumeText ? 'Resume Uploaded ✓' : 'Select Resume File'}
                 </Button>
               </div>
+
+              {resumeAtsScore !== null && (
+                <div className="mt-4 p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl w-full text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Extracted ATS Score</span>
+                  <h4 className="text-2xl font-black text-indigo-400 mt-1 animate-pulse">{resumeAtsScore}/100</h4>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -296,6 +314,9 @@ export default function Setup() {
                 )}
               />
               {errors.candidateName && <p className="text-xs text-red-500">{errors.candidateName.message}</p>}
+              {watch('candidateName') && resumeText && (
+                <p className="text-xs text-green-500 font-semibold mt-1">✓ Name automatically extracted from your resume!</p>
+              )}
             </div>
 
             {/* Mode Selection */}
@@ -335,28 +356,7 @@ export default function Setup() {
               />
             </div>
 
-            {/* Company Selection (visible if Face-to-Face selected) */}
-            {watch('mode') === 'face_to_face' && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-8 space-y-3"
-              >
-                <label className="text-sm font-semibold text-slate-900 dark:text-white">Interviewer Company</label>
-                <Controller
-                  name="company"
-                  control={control}
-                  render={({ field }) => (
-                    <select {...field} className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-black text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                      {['Google', 'Microsoft', 'Amazon', 'NVIDIA', 'OpenAI', 'Apple', 'Netflix'].map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  )}
-                />
-                <p className="text-xs text-slate-500">The AI virtual interviewer will adapt the style, difficulty, and values of this selected company.</p>
-              </motion.div>
-            )}
+
 
             <div className="grid md:grid-cols-2 gap-8">
               {/* Role */}

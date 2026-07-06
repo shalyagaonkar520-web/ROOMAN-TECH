@@ -10,17 +10,18 @@ import {
   signInAnonymously,
   RecaptchaVerifier,
   signInWithPhoneNumber,
-  ConfirmationResult
+  ConfirmationResult,
+  updateProfile
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
-  signupWithEmail: (email: string, pass: string) => Promise<void>;
-  loginWithEmail: (email: string, pass: string) => Promise<void>;
-  loginAsGuest: () => Promise<void>;
+  loginWithGoogle: () => Promise<any>;
+  signupWithEmail: (email: string, pass: string, name: string) => Promise<any>;
+  loginWithEmail: (email: string, pass: string) => Promise<any>;
+  loginAsGuest: () => Promise<any>;
   setupRecaptcha: (containerId: string) => RecaptchaVerifier;
   sendPhoneCode: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
   logout: () => Promise<void>;
@@ -46,20 +47,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const res = await signInWithPopup(auth, provider);
+    return res.user;
   };
 
-  const signupWithEmail = async (email: string, pass: string) => {
-    await createUserWithEmailAndPassword(auth, email, pass);
+  const signupWithEmail = async (email: string, pass: string, name: string) => {
+    const res = await createUserWithEmailAndPassword(auth, email, pass);
+    if (res.user) {
+      await updateProfile(res.user, { displayName: name });
+    }
+    return res.user;
   };
 
   const loginWithEmail = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+    const res = await signInWithEmailAndPassword(auth, email, pass);
+    return res.user;
   };
 
   const loginAsGuest = async () => {
-    await signInAnonymously(auth);
+    const res = await signInAnonymously(auth);
+    return res.user;
   };
+
 
   const setupRecaptcha = (containerId: string) => {
     return new RecaptchaVerifier(auth, containerId, {

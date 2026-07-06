@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BrainCircuit, History, Moon, Sun, LogIn, LogOut, Laptop } from 'lucide-react';
+import { BrainCircuit, LayoutDashboard, Moon, Sun, LogIn, LogOut, Laptop } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
@@ -29,24 +29,25 @@ export default function Layout() {
                 <BrainCircuit className="w-5 h-5" />
               </div>
               <span className="font-bold text-lg tracking-tight">
-                AI <span className="text-slate-500 dark:text-slate-400">Interviewer</span>
+                Rooman <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">AI</span>
               </span>
             </Link>
             
             <div className="flex items-center space-x-6">
               {user && (
                 <Link 
-                  to="/history" 
-                  className={`text-sm font-medium flex items-center space-x-2 transition-colors ${
-                    location.pathname === '/history' 
-                    ? 'text-blue-600 dark:text-blue-400' 
+                  to="/dashboard" 
+                  className={`text-sm font-semibold flex items-center space-x-2 transition-colors ${
+                    location.pathname === '/dashboard' 
+                    ? 'text-indigo-600 dark:text-indigo-400' 
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
-                  <History className="w-4 h-4" />
-                  <span>History</span>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
                 </Link>
               )}
+
               
               <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
               
@@ -101,15 +102,15 @@ export default function Layout() {
 
       <footer className="border-t border-slate-200/50 dark:border-white/10 py-8 mt-12 bg-white/50 dark:bg-black/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <BrainCircuit className="w-4 h-4" />
-            <span>AI Interviewer © 2026</span>
-          </div>
-          <div className="flex items-center space-x-6">
-             <span>Built for the 24 Hour AI Agent Challenge</span>
-             <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-slate-200 flex items-center">
-               <Laptop className="w-4 h-4 mr-1" /> View Source
-             </a>
+            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+              <BrainCircuit className="w-4 h-4" />
+              <span>Rooman AI Interviewer © 2026</span>
+            </div>
+            <div className="flex items-center space-x-6">
+               <span>Powered by Gemini AI</span>
+               <a href="https://github.com/shalyagaonkar520-web/ROOMAN-TECH" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-slate-200 flex items-center">
+                 <Laptop className="w-4 h-4 mr-1" /> View Source
+               </a>
           </div>
         </div>
       </footer>

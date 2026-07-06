@@ -1,16 +1,22 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Setup from './pages/Setup';
 import Interview from './pages/Interview';
 import FaceToFaceInterview from './pages/FaceToFaceInterview';
 import Dashboard from './pages/Dashboard';
-import History from './pages/History';
 import Login from './pages/Login';
+import DashboardOverview from './pages/DashboardOverview';
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useStore } from './store/useStore';
+
+function SmartRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+}
 
 export default function App() {
   const theme = useStore((state) => state.theme);
@@ -27,7 +33,8 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Landing />} />
+          <Route index element={<SmartRedirect />} />
+          <Route path="welcome" element={<Landing />} />
           <Route path="login" element={<Login />} />
           <Route path="setup" element={
             <ProtectedRoute>
@@ -49,9 +56,9 @@ export default function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-          <Route path="history" element={
+          <Route path="dashboard" element={
             <ProtectedRoute>
-              <History />
+              <DashboardOverview />
             </ProtectedRoute>
           } />
         </Route>
@@ -59,3 +66,5 @@ export default function App() {
     </AuthProvider>
   );
 }
+
+
