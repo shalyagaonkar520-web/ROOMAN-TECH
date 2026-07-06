@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { PDFParse } from 'pdf-parse';
+import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 import db from './db';
 import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, where, orderBy, deleteDoc, serverTimestamp } from 'firebase/firestore';
@@ -67,9 +67,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       step = 'Step 5: Starting pdf-parse.';
       console.log(step);
       try {
-        const parser = new PDFParse({ data: buffer });
-        const pdfData = await parser.getText();
-        await parser.destroy();
+        const pdfData = await pdf(buffer);
         text = pdfData.text;
       } catch (parseErr: any) {
          console.error('PDFParse failed internally:', parseErr);

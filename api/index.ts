@@ -25,7 +25,7 @@ app.use('/api', (err: any, req: express.Request, res: express.Response, next: ex
 });
 
 // IMPORTANT: Do NOT call app.listen() here. Vercel Serverless Functions expect the raw Express app instance.
-export default app;
+module.exports = app;
 
 // Disable Vercel's default body parser so Multer and Express can parse the raw stream
 export const config = {
