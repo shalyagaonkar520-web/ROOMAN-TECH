@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "interview_id", "order": "ASCENDING" },
+        { "fieldPath": "order_idx", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
