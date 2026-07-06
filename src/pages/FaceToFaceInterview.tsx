@@ -489,7 +489,16 @@ export default function FaceToFaceInterview() {
     const fetchInterview = async () => {
       try {
         const response = await fetch(`/api/interviews/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch interview session');
+        if (!response.ok) {
+          let backendError = 'Failed to fetch interview session';
+          try {
+            const errJson = await response.json();
+            backendError += `: ${errJson.error || errJson.message || JSON.stringify(errJson)}`;
+          } catch (e) {
+            backendError += ` (HTTP ${response.status}: ${response.statusText})`;
+          }
+          throw new Error(backendError);
+        }
         const data = await response.json();
         setInterview(data.interview);
         
@@ -507,8 +516,9 @@ export default function FaceToFaceInterview() {
         } else if (loadedQuestions.length > 0) {
           setCurrentQuestion(loadedQuestions[loadedQuestions.length - 1]);
         }
-      } catch (err) {
-        setError('Failed to configure virtual meeting call.');
+      } catch (err: any) {
+        console.error('Face-to-Face configuration error:', err);
+        setError(`Failed to configure virtual meeting call: ${err.message || String(err)}`);
       } finally {
         setIsLoading(false);
       }

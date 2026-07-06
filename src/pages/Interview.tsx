@@ -78,7 +78,16 @@ export default function Interview() {
     const fetchInterview = async () => {
       try {
         const response = await fetch(`/api/interviews/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch');
+        if (!response.ok) {
+          let backendError = 'Failed to fetch interview session';
+          try {
+            const errJson = await response.json();
+            backendError += `: ${errJson.error || errJson.message || JSON.stringify(errJson)}`;
+          } catch (e) {
+            backendError += ` (HTTP ${response.status}: ${response.statusText})`;
+          }
+          throw new Error(backendError);
+        }
         const data = await response.json();
         setInterview(data.interview);
         setQuestions(data.questions);
@@ -95,8 +104,9 @@ export default function Interview() {
         } else if (data.questions.length > 0) {
           setCurrentIndex(data.questions.length - 1);
         }
-      } catch (err) {
-        setError('Failed to load interview session');
+      } catch (err: any) {
+        console.error('Interview load error:', err);
+        setError(`Failed to load interview session: ${err.message || String(err)}`);
       } finally {
         setIsLoading(false);
       }
