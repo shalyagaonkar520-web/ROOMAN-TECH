@@ -17,7 +17,7 @@ import {
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
+router.post('/upload', upload.single('resume') as any, async (req: any, res: any) => {
   let step = 'Step 1: Resume upload started.';
   console.log(step);
   try {

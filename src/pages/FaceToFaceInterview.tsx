@@ -61,9 +61,13 @@ export default function FaceToFaceInterview() {
   const [hasRetried, setHasRetried] = useState(false);
 
   // Dynamic Welcome Voice Check flow stages
-  const [welcomeStage, setWelcomeStage] = useState<'active'>('active');
+  const [welcomeStage, setWelcomeStage] = useState<'active' | 'hear_check' | 'hear_voice'>('active');
   const hearCheckFailsRef = useRef(0);
   const [speechRate, setSpeechRate] = useState(1.0);
+
+  const handleProceedVoiceFlow = () => {
+    setWelcomeStage('active');
+  };
 
   // Real-time AI Proctoring States
   const [isModelLoading, setIsModelLoading] = useState(true);
