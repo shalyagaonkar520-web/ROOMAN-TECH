@@ -7,8 +7,8 @@ const firebaseConfig = {
   projectId: "rooman-eb7dd",
   storageBucket: "rooman-eb7dd.firebasestorage.app",
   messagingSenderId: "1056229436313",
-  appId: "1:1056229436313:web:76e95b726980f4e4eec108",
-  measurementId: "G-33ZTX3Q38H"
+  appId: "1:1056229436313:web:d7087ee79d2d863aeec108",
+  measurementId: "G-VDJZW89F1M"
 };
 
 // Initialize Firebase
