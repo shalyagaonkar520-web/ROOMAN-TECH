@@ -10,83 +10,47 @@ import {
 } from './prompts';
 
 let groq: Groq | null = null;
+const MODEL = 'llama-3.3-70b-versatile';
 
 async function chatCompletion(messages: any[], jsonMode = false, temperature = 0.5) {
-  const groqKey = process.env.GROK_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
 
-  if (!groqKey || groqKey === "your-groq-api-key-here" || groqKey.trim() === "") {
-    if (!openaiKey) {
-      throw new Error('GROK_API_KEY is missing.');
-    }
+  if (!apiKey || apiKey === "your-groq-api-key-here" || apiKey.trim() === "") {
+    throw new Error('GROQ_API_KEY is missing.');
   }
 
-  if (groqKey && groqKey !== "your-groq-api-key-here" && groqKey.trim() !== "") {
-    if (groqKey.startsWith('xai-')) {
-      console.log('Step 7: Calling Grok API.');
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${groqKey}`
-        },
-        body: JSON.stringify({
-          model: 'grok-2-latest',
-          messages,
-          response_format: jsonMode ? { type: 'json_object' } : undefined,
-          temperature,
-        })
-      });
-      
-      console.log(`Step 8: Received Grok response. Status: ${response.status}`);
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`[Grok API ${response.status}] ${errText}`);
-      }
-      const data = await response.json();
-      return data.choices[0]?.message?.content;
-    } else {
-      if (!groq) {
-        groq = new Groq({ apiKey: groqKey });
-      }
-      console.log('Step 7: Calling Groq API.');
-      const response = await groq.chat.completions.create({
-        model: MODEL,
-        messages,
-        response_format: jsonMode ? { type: 'json_object' } : undefined,
-        temperature,
-      });
-      console.log('Step 8: Received Groq response.');
-      return response.choices[0]?.message?.content;
-    }
-  } else if (openaiKey) {
-    console.log('Step 7: Calling OpenAI API.');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages,
-        response_format: jsonMode ? { type: 'json_object' } : undefined,
-        temperature,
-      })
+  if (!groq) {
+    groq = new Groq({ apiKey });
+  }
+
+  console.log('Step 7: Calling Groq API.');
+  try {
+    const response = await groq.chat.completions.create({
+      model: MODEL,
+      messages,
+      response_format: jsonMode ? { type: 'json_object' } : undefined,
+      temperature,
     });
+    console.log('Step 8: Received Groq response.');
     
-    console.log(`Step 8: Received OpenAI response. Status: ${response.status}`);
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`[OpenAI API ${response.status}] ${errText}`);
+    let content = response.choices[0]?.message?.content || '';
+    
+    // Safely parse JSON by stripping markdown code block wrappers if the model hallucinated them
+    if (jsonMode && content) {
+      content = content.trim();
+      if (content.startsWith('```json')) {
+        content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (content.startsWith('```')) {
+        content = content.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
     }
     
-    const data = await response.json();
-    return data.choices[0]?.message?.content;
+    return content;
+  } catch (err: any) {
+    console.error('Groq API execution failed:', err);
+    throw new Error(`[Groq API Error] ${err.message}`);
   }
 }
-
-const MODEL = 'llama-3.3-70b-versatile';
 
 export async function generateQuestions(context: any) {
   const systemPrompt = `${QUESTION_GENERATION_PROMPT}\n\nYou MUST return a JSON object with a "questions" key containing an array of objects. Each object must match this schema exactly: { "question_text": string, "topic": string, "difficulty": string, "expected_answer": string }`;

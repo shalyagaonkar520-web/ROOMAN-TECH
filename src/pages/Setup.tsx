@@ -139,7 +139,7 @@ export default function Setup() {
           errObj = {
              step: parsed.step || 'Unknown Backend Step',
              reason: parsed.error || 'Server crashed silently',
-             fix: parsed.step === 'Grok API Error' ? 'Check your GROK_API_KEY in Vercel settings.' : 'Check the resume file format.'
+             fix: parsed.step === 'Groq API Error' ? 'Check your GROQ_API_KEY in Vercel settings.' : 'Check the resume file format.'
           };
         } catch (e) {}
         throw errObj;

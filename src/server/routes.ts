@@ -96,15 +96,15 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       return res.status(400).json({ success: false, step, error: 'No text could be extracted.', stack: null });
     }
 
-    step = 'Step 7: Calling Grok API.';
+    step = 'Step 7: Calling Groq API.';
     let extractedData = {};
     if (req.body.type === 'resume') {
       try {
          extractedData = await extractResumeDetails(text);
-         console.log('Step 8: Received Grok response.');
+         console.log('Step 8: Received Groq response.');
       } catch (e: any) {
          console.error('Error extracting resume data:', e);
-         return res.status(500).json({ success: false, step: 'Grok API Error', error: e.message, stack: e.stack });
+         return res.status(500).json({ success: false, step: 'Groq API Error', error: e.message, stack: e.stack });
       }
     }
     
