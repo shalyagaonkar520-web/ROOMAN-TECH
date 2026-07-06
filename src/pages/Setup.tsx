@@ -132,7 +132,16 @@ export default function Setup() {
         body: formData
       });
       
-      if (!response.ok) throw new Error(`Failed to parse ${type}`);
+      if (!response.ok) {
+        let errorMessage = `Failed to parse ${type}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error ? `[${errorData.step || 'Server'}] ${errorData.error}` : JSON.stringify(errorData);
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       const { text, role, yearsExperience, programmingLanguage, skills } = data;
       
