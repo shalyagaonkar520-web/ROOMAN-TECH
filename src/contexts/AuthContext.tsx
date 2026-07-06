@@ -6,7 +6,11 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signInAnonymously,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
@@ -16,6 +20,9 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   signupWithEmail: (email: string, pass: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
+  setupRecaptcha: (containerId: string) => RecaptchaVerifier;
+  sendPhoneCode: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
   logout: () => Promise<void>;
 }
 
@@ -50,6 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
+  const loginAsGuest = async () => {
+    await signInAnonymously(auth);
+  };
+
+  const setupRecaptcha = (containerId: string) => {
+    return new RecaptchaVerifier(auth, containerId, {
+      size: 'invisible'
+    });
+  };
+
+  const sendPhoneCode = async (phoneNumber: string, verifier: RecaptchaVerifier) => {
+    return await signInWithPhoneNumber(auth, phoneNumber, verifier);
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
@@ -60,6 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginWithGoogle,
     signupWithEmail,
     loginWithEmail,
+    loginAsGuest,
+    setupRecaptcha,
+    sendPhoneCode,
     logout
   };
 

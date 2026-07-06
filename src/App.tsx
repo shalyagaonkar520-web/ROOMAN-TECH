@@ -7,6 +7,9 @@ import Interview from './pages/Interview';
 import FaceToFaceInterview from './pages/FaceToFaceInterview';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
 import { useStore } from './store/useStore';
 
 export default function App() {
@@ -21,15 +24,38 @@ export default function App() {
   }, [theme]);
 
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Landing />} />
-        <Route path="setup" element={<Setup />} />
-        <Route path="interview/:id" element={<Interview />} />
-        <Route path="interview/f2f/:id" element={<FaceToFaceInterview />} />
-        <Route path="report/:id" element={<Dashboard />} />
-        <Route path="history" element={<History />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Landing />} />
+          <Route path="login" element={<Login />} />
+          <Route path="setup" element={
+            <ProtectedRoute>
+              <Setup />
+            </ProtectedRoute>
+          } />
+          <Route path="interview/:id" element={
+            <ProtectedRoute>
+              <Interview />
+            </ProtectedRoute>
+          } />
+          <Route path="interview/f2f/:id" element={
+            <ProtectedRoute>
+              <FaceToFaceInterview />
+            </ProtectedRoute>
+          } />
+          <Route path="report/:id" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="history" element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          } />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }

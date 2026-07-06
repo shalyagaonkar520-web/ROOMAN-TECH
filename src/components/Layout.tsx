@@ -1,11 +1,23 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { BrainCircuit, History, Moon, Sun, Laptop } from 'lucide-react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BrainCircuit, History, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
 
 export default function Layout() {
   const { theme, toggleTheme } = useStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error("Failed to log out", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0A] text-slate-900 dark:text-slate-50 font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-300 flex flex-col">
@@ -22,18 +34,45 @@ export default function Layout() {
             </Link>
             
             <div className="flex items-center space-x-6">
-              <Link 
-                to="/history" 
-                className={`text-sm font-medium flex items-center space-x-2 transition-colors ${
-                  location.pathname === '/history' 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                <History className="w-4 h-4" />
-                <span>History</span>
-              </Link>
+              {user && (
+                <Link 
+                  to="/history" 
+                  className={`text-sm font-medium flex items-center space-x-2 transition-colors ${
+                    location.pathname === '/history' 
+                    ? 'text-blue-600 dark:text-blue-400' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <History className="w-4 h-4" />
+                  <span>History</span>
+                </Link>
+              )}
               
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+              
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-slate-500 hidden sm:inline-block">
+                    {user.email}
+                  </span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex items-center space-x-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline-block">Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <Link 
+                  to="/login"
+                  className="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </Link>
+              )}
+
               <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
               
               <button 
