@@ -33,3 +33,6 @@ export const config = {
     bodyParser: false,
   },
 };
+
+// Increase Vercel timeout to 60 seconds for slow LLM operations (Hobby Tier max)
+export const maxDuration = 60;
