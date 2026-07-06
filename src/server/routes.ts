@@ -17,44 +17,98 @@ import {
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/upload', upload.single('file'), async (req: any, res: any) => {
+router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
+  let step = 'init';
   try {
+    step = 'file_validation';
     if (!req.file) {
-      res.status(400).json({ error: 'No file uploaded' });
-      return;
+      console.error('req.file is undefined');
+      console.error('req.headers:', req.headers);
+      console.error('req.body:', req.body);
+      return res.status(400).json({ success: false, step, error: 'No file uploaded', stack: null });
     }
     
+    if (!req.file.buffer) {
+      console.error('req.file.buffer is undefined');
+      return res.status(400).json({ success: false, step, error: 'File buffer is missing', stack: null });
+    }
+
+    if (req.file.buffer.length === 0) {
+      console.error('Buffer length is 0');
+      return res.status(400).json({ success: false, step, error: 'File buffer is empty', stack: null });
+    }
+    
+    step = 'mime_check';
+    const mimeType = req.file.mimetype;
+    const originalName = req.file.originalname;
+    const bufferSize = req.file.buffer.length;
+
+    console.log(`[Upload] File Name: ${originalName}`);
+    console.log(`[Upload] File Size: ${req.file.size}`);
+    console.log(`[Upload] Mime Type: ${mimeType}`);
+    console.log(`[Upload] Buffer Size: ${bufferSize}`);
+
+    const validMimes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    if (!validMimes.includes(mimeType) && !originalName.endsWith('.docx') && !originalName.endsWith('.pdf') && !originalName.endsWith('.doc')) {
+       console.error('Unsupported MIME type:', mimeType);
+       return res.status(400).json({ success: false, step, error: `Unsupported file type: ${mimeType}`, stack: null });
+    }
+
     let text = '';
     const buffer = req.file.buffer;
-    const mimeType = req.file.mimetype;
     
-    if (mimeType === 'application/pdf') {
-      const parser = new PDFParse({ data: buffer });
-      const pdfData = await parser.getText();
-      await parser.destroy();
-      text = pdfData.text;
+    if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
+      step = 'pdf_parse';
+      // We explicitly try/catch pdf-parse because it is prone to crashing in Serverless environments
+      try {
+        const parser = new PDFParse({ data: buffer });
+        const pdfData = await parser.getText();
+        await parser.destroy();
+        text = pdfData.text;
+      } catch (parseErr: any) {
+         console.error('PDFParse failed internally:', parseErr);
+         throw parseErr;
+      }
+      console.log(`[Upload] Extracted text length (PDF): ${text?.length}`);
     } else if (
       mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-      req.file.originalname.endsWith('.docx')
+      mimeType === 'application/msword' ||
+      originalName.endsWith('.docx') ||
+      originalName.endsWith('.doc')
     ) {
+      step = 'mammoth_parse';
       const docxData = await mammoth.extractRawText({ buffer });
       text = docxData.value;
+      console.log(`[Upload] Extracted text length (DOCX): ${text?.length}`);
     } else {
-      text = buffer.toString('utf-8');
+      step = 'unsupported';
+      return res.status(400).json({ success: false, step, error: `Unsupported file type: ${mimeType}`, stack: null });
     }
     
+    if (!text || text.trim().length === 0) {
+      console.error('Extracted text is empty');
+      return res.status(400).json({ success: false, step, error: 'Extracted text is empty or unreadable', stack: null });
+    }
+
+    step = 'llm_extraction';
     let extractedData = {};
     if (req.body.type === 'resume') {
       try {
          extractedData = await extractResumeDetails(text);
-      } catch (e) {
+      } catch (e: any) {
          console.error('Error extracting resume data:', e);
+         return res.status(500).json({ success: false, step: 'llm_extraction', error: e.message, stack: e.stack });
       }
     }
-    res.json({ text, ...extractedData });
-  } catch (error) {
-    console.error('File parsing error:', error);
-    res.status(500).json({ error: String(error) });
+    
+    res.json({ success: true, text, ...extractedData });
+  } catch (error: any) {
+    console.error(error);
+    console.error('req.file:', req.file);
+    console.error('req.headers:', req.headers);
+    console.error('req.body:', req.body);
+    res.status(500).json({ success: false, step, error: error.message, stack: error.stack });
   }
 });
 

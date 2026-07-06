@@ -124,7 +124,7 @@ export default function Setup() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('resume', file);
       formData.append('type', type);
       
       const response = await fetch('/api/upload', {
