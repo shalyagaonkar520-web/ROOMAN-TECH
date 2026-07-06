@@ -18,9 +18,11 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
-  let step = 'init';
+  let step = 'Step 1: Resume upload started.';
+  console.log(step);
   try {
-    step = 'file_validation';
+    step = 'Step 2: Checking req.file.';
+    console.log(step);
     if (!req.file) {
       console.error('req.file is undefined');
       console.error('req.headers:', req.headers);
@@ -28,6 +30,8 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       return res.status(400).json({ success: false, step, error: 'No file uploaded', stack: null });
     }
     
+    step = 'Step 4: Checking buffer.';
+    console.log(step);
     if (!req.file.buffer) {
       console.error('req.file.buffer is undefined');
       return res.status(400).json({ success: false, step, error: 'File buffer is missing', stack: null });
@@ -38,7 +42,8 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       return res.status(400).json({ success: false, step, error: 'File buffer is empty', stack: null });
     }
     
-    step = 'mime_check';
+    step = 'Step 3: Checking file type.';
+    console.log(step);
     const mimeType = req.file.mimetype;
     const originalName = req.file.originalname;
     const bufferSize = req.file.buffer.length;
@@ -59,8 +64,8 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
     const buffer = req.file.buffer;
     
     if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
-      step = 'pdf_parse';
-      // We explicitly try/catch pdf-parse because it is prone to crashing in Serverless environments
+      step = 'Step 5: Starting pdf-parse.';
+      console.log(step);
       try {
         const parser = new PDFParse({ data: buffer });
         const pdfData = await parser.getText();
@@ -70,38 +75,43 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
          console.error('PDFParse failed internally:', parseErr);
          throw parseErr;
       }
-      console.log(`[Upload] Extracted text length (PDF): ${text?.length}`);
     } else if (
       mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
       mimeType === 'application/msword' ||
       originalName.endsWith('.docx') ||
       originalName.endsWith('.doc')
     ) {
-      step = 'mammoth_parse';
+      step = 'Step 5: Starting mammoth (DOCX parse).';
+      console.log(step);
       const docxData = await mammoth.extractRawText({ buffer });
       text = docxData.value;
-      console.log(`[Upload] Extracted text length (DOCX): ${text?.length}`);
     } else {
-      step = 'unsupported';
       return res.status(400).json({ success: false, step, error: `Unsupported file type: ${mimeType}`, stack: null });
     }
     
+    step = 'Step 6: PDF parsed successfully.';
+    console.log(step);
+    console.log(`[Upload] Extracted text length: ${text?.length}`);
+
     if (!text || text.trim().length === 0) {
       console.error('Extracted text is empty');
-      return res.status(400).json({ success: false, step, error: 'Extracted text is empty or unreadable', stack: null });
+      return res.status(400).json({ success: false, step, error: 'No text could be extracted.', stack: null });
     }
 
-    step = 'llm_extraction';
+    step = 'Step 7: Calling Grok API.';
     let extractedData = {};
     if (req.body.type === 'resume') {
       try {
          extractedData = await extractResumeDetails(text);
+         console.log('Step 8: Received Grok response.');
       } catch (e: any) {
          console.error('Error extracting resume data:', e);
-         return res.status(500).json({ success: false, step: 'llm_extraction', error: e.message, stack: e.stack });
+         return res.status(500).json({ success: false, step: 'Grok API Error', error: e.message, stack: e.stack });
       }
     }
     
+    step = 'Step 10: Returning response.';
+    console.log(step);
     res.json({ success: true, text, ...extractedData });
   } catch (error: any) {
     console.error(error);

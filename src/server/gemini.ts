@@ -15,8 +15,15 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
   const groqKey = process.env.GROK_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
 
+  if (!groqKey || groqKey === "your-groq-api-key-here" || groqKey.trim() === "") {
+    if (!openaiKey) {
+      throw new Error('GROK_API_KEY is missing.');
+    }
+  }
+
   if (groqKey && groqKey !== "your-groq-api-key-here" && groqKey.trim() !== "") {
     if (groqKey.startsWith('xai-')) {
+      console.log('Step 7: Calling Grok API.');
       const response = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -30,9 +37,11 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
           temperature,
         })
       });
+      
+      console.log(`Step 8: Received Grok response. Status: ${response.status}`);
       if (!response.ok) {
         const errText = await response.text();
-        throw new Error(`Grok (xAI) API error: ${response.status} - ${errText}`);
+        throw new Error(`[Grok API ${response.status}] ${errText}`);
       }
       const data = await response.json();
       return data.choices[0]?.message?.content;
@@ -40,15 +49,18 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
       if (!groq) {
         groq = new Groq({ apiKey: groqKey });
       }
+      console.log('Step 7: Calling Groq API.');
       const response = await groq.chat.completions.create({
         model: MODEL,
         messages,
         response_format: jsonMode ? { type: 'json_object' } : undefined,
         temperature,
       });
+      console.log('Step 8: Received Groq response.');
       return response.choices[0]?.message?.content;
     }
   } else if (openaiKey) {
+    console.log('Step 7: Calling OpenAI API.');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -63,15 +75,14 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
       })
     });
     
+    console.log(`Step 8: Received OpenAI response. Status: ${response.status}`);
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errText}`);
+      throw new Error(`[OpenAI API ${response.status}] ${errText}`);
     }
     
     const data = await response.json();
     return data.choices[0]?.message?.content;
-  } else {
-    throw new Error('No valid AI API key found. Please set GROK_API_KEY or ensure OPENAI_API_KEY is configured.');
   }
 }
 

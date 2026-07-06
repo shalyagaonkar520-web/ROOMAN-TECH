@@ -49,7 +49,7 @@ type SetupForm = z.infer<typeof setupSchema>;
 
 export default function Setup() {
   const navigate = useNavigate();
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorData, setErrorData] = useState<any>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [isParsingJD, setIsParsingJD] = useState(false);
 
@@ -110,7 +110,7 @@ export default function Setup() {
       }
     },
     onError: (error: Error) => {
-      setErrorMsg(error.message);
+      setErrorData({ raw: error.message });
     }
   });
 
@@ -120,7 +120,7 @@ export default function Setup() {
 
     if (type === 'resume') setIsParsingResume(true);
     else setIsParsingJD(true);
-    setErrorMsg('');
+    setErrorData(null);
 
     try {
       const formData = new FormData();
@@ -133,14 +133,16 @@ export default function Setup() {
       });
       
       if (!response.ok) {
-        let errorMessage = `Failed to parse ${type}`;
+        let errObj: any = { raw: `HTTP ${response.status}: ${response.statusText}` };
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.error ? `[${errorData.step || 'Server'}] ${errorData.error}` : JSON.stringify(errorData);
-        } catch (parseError) {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+          const parsed = await response.json();
+          errObj = {
+             step: parsed.step || 'Unknown Backend Step',
+             reason: parsed.error || 'Server crashed silently',
+             fix: parsed.step === 'Grok API Error' ? 'Check your GROK_API_KEY in Vercel settings.' : 'Check the resume file format.'
+          };
+        } catch (e) {}
+        throw errObj;
       }
       const data = await response.json();
       const { text, role, yearsExperience, programmingLanguage, skills } = data;
@@ -175,7 +177,7 @@ export default function Setup() {
         }
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to upload document');
+      setErrorData(err.step ? err : { raw: err.message || 'Failed to upload document' });
     } finally {
       if (type === 'resume') setIsParsingResume(false);
       else setIsParsingJD(false);
@@ -183,7 +185,7 @@ export default function Setup() {
   };
 
   const onSubmit = (data: SetupForm) => {
-    setErrorMsg('');
+    setErrorData(null);
     
     // Start loading check list sequence
     setLoadingStep(0);
@@ -481,10 +483,20 @@ export default function Setup() {
               </div>
             </div>
 
-            {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm flex items-start border border-red-200 dark:border-red-500/20 mt-6">
-                <AlertCircle className="w-5 h-5 mr-3 shrink-0" />
-                <p>{errorMsg}</p>
+            {errorData && (
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm flex items-start border border-red-200 dark:border-red-500/20 mt-6 flex-col w-full">
+                <div className="flex items-center font-bold mb-3">
+                  <AlertCircle className="w-5 h-5 mr-3 shrink-0" /> Error Occurred
+                </div>
+                {errorData.step ? (
+                  <div className="w-full text-xs space-y-2 bg-black/5 dark:bg-black/20 p-3 rounded-lg border border-red-500/10">
+                    <p><span className="font-bold opacity-80 uppercase tracking-wider text-[10px] block mb-0.5">Current Step</span> <span className="text-sm">{errorData.step}</span></p>
+                    <p><span className="font-bold opacity-80 uppercase tracking-wider text-[10px] block mb-0.5 mt-2">Reason</span> <span className="text-sm">{errorData.reason}</span></p>
+                    <p><span className="font-bold opacity-80 uppercase tracking-wider text-[10px] block mb-0.5 mt-2">Suggested Fix</span> <span className="text-sm">{errorData.fix}</span></p>
+                  </div>
+                ) : (
+                  <p className="ml-8">{errorData.raw}</p>
+                )}
               </div>
             )}
 
