@@ -27,19 +27,19 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       console.error('req.file is undefined');
       console.error('req.headers:', req.headers);
       console.error('req.body:', req.body);
-      return res.status(400).json({ success: false, step, error: 'No file uploaded', stack: null });
+      return res.status(400).json({ success: false, step, message: 'No file uploaded', stack: null });
     }
     
     step = 'Step 4: Checking buffer.';
     console.log(step);
     if (!req.file.buffer) {
       console.error('req.file.buffer is undefined');
-      return res.status(400).json({ success: false, step, error: 'File buffer is missing', stack: null });
+      return res.status(400).json({ success: false, step, message: 'File buffer is missing', stack: null });
     }
 
     if (req.file.buffer.length === 0) {
       console.error('Buffer length is 0');
-      return res.status(400).json({ success: false, step, error: 'File buffer is empty', stack: null });
+      return res.status(400).json({ success: false, step, message: 'File buffer is empty', stack: null });
     }
     
     step = 'Step 3: Checking file type.';
@@ -57,7 +57,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
     
     if (!validMimes.includes(mimeType) && !originalName.endsWith('.docx') && !originalName.endsWith('.pdf') && !originalName.endsWith('.doc')) {
        console.error('Unsupported MIME type:', mimeType);
-       return res.status(400).json({ success: false, step, error: `Unsupported file type: ${mimeType}`, stack: null });
+       return res.status(400).json({ success: false, step, message: `Unsupported file type: ${mimeType}`, stack: null });
     }
 
     let text = '';
@@ -84,7 +84,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
       const docxData = await mammoth.extractRawText({ buffer });
       text = docxData.value;
     } else {
-      return res.status(400).json({ success: false, step, error: `Unsupported file type: ${mimeType}`, stack: null });
+      return res.status(400).json({ success: false, step, message: `Unsupported file type: ${mimeType}`, stack: null });
     }
     
     step = 'Step 6: PDF parsed successfully.';
@@ -93,7 +93,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
 
     if (!text || text.trim().length === 0) {
       console.error('Extracted text is empty');
-      return res.status(400).json({ success: false, step, error: 'No text could be extracted.', stack: null });
+      return res.status(400).json({ success: false, step, message: 'No text could be extracted.', stack: null });
     }
 
     step = 'Step 7: Calling Groq API.';
@@ -104,7 +104,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
          console.log('Step 8: Received Groq response.');
       } catch (e: any) {
          console.error('Error extracting resume data:', e);
-         return res.status(500).json({ success: false, step: 'Groq API Error', error: e.message, stack: e.stack });
+         return res.status(500).json({ success: false, step: 'Groq API Error', message: e.message, stack: e.stack });
       }
     }
     
@@ -116,7 +116,7 @@ router.post('/upload', upload.single('resume'), async (req: any, res: any) => {
     console.error('req.file:', req.file);
     console.error('req.headers:', req.headers);
     console.error('req.body:', req.body);
-    res.status(500).json({ success: false, step, error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, step, message: error.message, stack: error.stack });
   }
 });
 

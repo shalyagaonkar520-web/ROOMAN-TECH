@@ -5,11 +5,23 @@ import cors from 'cors';
 
 dotenv.config();
 
+console.log('[Vercel] Serverless Function boot sequence initiated.');
+
 const app = express();
 
 // Middlewares
+app.use((req, res, next) => {
+  console.log(`[Vercel] Incoming request: ${req.method} ${req.url}`);
+  next();
+});
 app.use(cors());
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.path === '/api/upload') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -21,11 +33,11 @@ app.use('/api', (req, res, next) => {
 
 app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => { 
   console.error('API Error:', err); 
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' }); 
+  res.status(err.status || 500).json({ success: false, step: 'Global Error Handler', message: err.message || 'Internal Server Error', stack: err.stack }); 
 });
 
 // IMPORTANT: Do NOT call app.listen() here. Vercel Serverless Functions expect the raw Express app instance.
-module.exports = app;
+export default app;
 
 // Disable Vercel's default body parser so Multer and Express can parse the raw stream
 export const config = {
