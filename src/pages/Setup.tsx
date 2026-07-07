@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,6 +52,7 @@ type SetupForm = z.infer<typeof setupSchema>;
 
 export default function Setup() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [errorData, setErrorData] = useState<any>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
@@ -85,7 +86,7 @@ export default function Setup() {
       numQuestions: 5,
       resumeText: '',
       jdText: '',
-      mode: 'premium',
+      mode: location.state?.defaultMode || 'premium',
       company: 'Google',
       candidateName: ''
     }
@@ -93,6 +94,12 @@ export default function Setup() {
 
   const resumeText = watch('resumeText');
   const jdText = watch('jdText');
+
+  useEffect(() => {
+    if (location.state?.defaultMode) {
+      setValue('mode', location.state.defaultMode);
+    }
+  }, [location.state?.defaultMode, setValue]);
 
   const mutation = useMutation({
     mutationFn: async (data: SetupForm) => {

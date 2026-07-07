@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
@@ -9,7 +9,9 @@ import FaceToFaceInterview from './pages/FaceToFaceInterview';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import DashboardOverview from './pages/DashboardOverview';
+import ManualTest from './pages/ManualTest';
 import ProtectedRoute from './components/ProtectedRoute';
+import SplashScreen from './components/SplashScreen';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useStore } from './store/useStore';
 
@@ -21,6 +23,7 @@ function SmartRedirect() {
 
 export default function App() {
   const theme = useStore((state) => state.theme);
+  const [showSplash, setShowSplash] = useState(true);
   
   useEffect(() => {
     if (theme === 'dark') {
@@ -31,7 +34,9 @@ export default function App() {
   }, [theme]);
 
   return (
-    <AuthProvider>
+    <>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      <AuthProvider>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<SmartRedirect />} />
@@ -67,9 +72,15 @@ export default function App() {
               <DashboardOverview />
             </ProtectedRoute>
           } />
+          <Route path="manual-test" element={
+            <ProtectedRoute>
+              <ManualTest />
+            </ProtectedRoute>
+          } />
         </Route>
       </Routes>
     </AuthProvider>
+    </>
   );
 }
 

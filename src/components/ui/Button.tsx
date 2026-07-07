@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { playClickSound } from '../../utils/audio';
 import { motion, HTMLMotionProps } from 'motion/react';
 
 export interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
@@ -33,6 +34,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={{ scale: 0.98 }}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         disabled={isLoading || props.disabled}
+        onClick={(e) => {
+          playClickSound();
+          if (props.onClick) {
+            props.onClick(e as any);
+          }
+        }}
         {...(props as any)}
       >
         {isLoading ? (

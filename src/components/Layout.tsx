@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BrainCircuit, LayoutDashboard, Moon, Sun, LogIn, LogOut, Laptop, Briefcase } from 'lucide-react';
+import { BrainCircuit, LayoutDashboard, Moon, Sun, LogIn, LogOut, Laptop, Briefcase, Zap, Code } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
@@ -58,7 +58,37 @@ export default function Layout() {
                   }`}
                 >
                   <Briefcase className="w-4 h-4" />
-                  <span>Career Assistant</span>
+                  <span className="hidden sm:inline-block">Career Assistant</span>
+                </Link>
+              )}
+
+              {user && (
+                <Link 
+                  to="/setup"
+                  state={{ defaultMode: 'face_to_face' }}
+                  className={`text-sm font-semibold flex items-center space-x-2 transition-colors ${
+                    location.pathname.includes('/setup') && location.state?.defaultMode === 'face_to_face'
+                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Zap className="w-4 h-4" />
+                  <span className="hidden lg:inline-block">Face to Face Interview</span>
+                </Link>
+              )}
+
+              {user && (
+                <Link 
+                  to="/setup"
+                  state={{ defaultMode: 'premium' }}
+                  className={`text-sm font-semibold flex items-center space-x-2 transition-colors ${
+                    location.pathname.includes('/setup') && location.state?.defaultMode === 'premium'
+                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Code className="w-4 h-4" />
+                  <span className="hidden lg:inline-block">Manual Test</span>
                 </Link>
               )}
 
