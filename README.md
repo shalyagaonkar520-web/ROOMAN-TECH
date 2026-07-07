@@ -1,5 +1,8 @@
 # 🚀 ROOMAN AI Interview Platform
-
+# ```text
+# Test Files  12 passed (12)
+# Tests       26 passed (26) all passed 
+# Duration    ~15–20s
 > **⚠️ Important Notice**
 >
 > **Please allow up to 2 minutes for the AI Career Assistant to initialize on your first visit.**
