@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Setup from './pages/Setup';
+import CareerAssistant from './pages/CareerAssistant';
 import Interview from './pages/Interview';
 import FaceToFaceInterview from './pages/FaceToFaceInterview';
 import Dashboard from './pages/Dashboard';
@@ -39,6 +40,11 @@ export default function App() {
           <Route path="setup" element={
             <ProtectedRoute>
               <Setup />
+            </ProtectedRoute>
+          } />
+          <Route path="career-assistant" element={
+            <ProtectedRoute>
+              <CareerAssistant />
             </ProtectedRoute>
           } />
           <Route path="interview/:id" element={

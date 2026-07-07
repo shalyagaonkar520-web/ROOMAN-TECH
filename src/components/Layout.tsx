@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BrainCircuit, LayoutDashboard, Moon, Sun, LogIn, LogOut, Laptop } from 'lucide-react';
+import { BrainCircuit, LayoutDashboard, Moon, Sun, LogIn, LogOut, Laptop, Briefcase } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
@@ -45,6 +45,20 @@ export default function Layout() {
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Dashboard</span>
+                </Link>
+              )}
+
+              {user && (
+                <Link 
+                  to="/career-assistant" 
+                  className={`text-sm font-semibold flex items-center space-x-2 transition-colors ${
+                    location.pathname === '/career-assistant' 
+                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Career Assistant</span>
                 </Link>
               )}
 

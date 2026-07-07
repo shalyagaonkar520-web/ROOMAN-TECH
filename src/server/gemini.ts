@@ -7,6 +7,11 @@ import {
   F2F_PLAN_GENERATION_PROMPT,
   F2F_EVALUATION_PROMPT,
   F2F_NEXT_QUESTION_PROMPT,
+  EXTRACT_FULL_RESUME_PROMPT,
+  EVALUATE_ATS_PROMPT,
+  OPTIMIZE_RESUME_PROMPT,
+  GENERATE_COVER_LETTER_PROMPT,
+  COMPARE_JD_PROMPT,
 } from './prompts';
 
 let groq: Groq | null = null;
@@ -145,3 +150,47 @@ export async function generateF2FNextQuestion(context: any, company: string, pla
   return JSON.parse(text);
 }
 
+export async function extractFullResume(resumeText: string) {
+  const text = await chatCompletion([
+    { role: 'system', content: EXTRACT_FULL_RESUME_PROMPT },
+    { role: 'user', content: resumeText }
+  ], true, 0.5);
+  if (!text) throw new Error('Failed to extract full resume details');
+  return JSON.parse(text);
+}
+
+export async function evaluateAts(parsedResume: any, targetRole: string) {
+  const text = await chatCompletion([
+    { role: 'system', content: EVALUATE_ATS_PROMPT },
+    { role: 'user', content: `Target Role: ${targetRole}\n\nResume JSON:\n${JSON.stringify(parsedResume, null, 2)}` }
+  ], true, 0.2);
+  if (!text) throw new Error('Failed to evaluate ATS');
+  return JSON.parse(text);
+}
+
+export async function optimizeResume(parsedResume: any, additionalDetails: any) {
+  const text = await chatCompletion([
+    { role: 'system', content: OPTIMIZE_RESUME_PROMPT },
+    { role: 'user', content: `Original Resume:\n${JSON.stringify(parsedResume, null, 2)}\n\nAdditional Details Provided by User:\n${JSON.stringify(additionalDetails, null, 2)}` }
+  ], true, 0.4);
+  if (!text) throw new Error('Failed to optimize resume');
+  return JSON.parse(text);
+}
+
+export async function generateCoverLetter(optimizedResume: any, targetRole: string, targetCompany: string) {
+  const text = await chatCompletion([
+    { role: 'system', content: GENERATE_COVER_LETTER_PROMPT },
+    { role: 'user', content: `Target Role: ${targetRole}\nTarget Company: ${targetCompany}\n\nCandidate Resume:\n${JSON.stringify(optimizedResume, null, 2)}` }
+  ], true, 0.7);
+  if (!text) throw new Error('Failed to generate cover letter');
+  return JSON.parse(text);
+}
+
+export async function compareJd(parsedResume: any, jdText: string) {
+  const text = await chatCompletion([
+    { role: 'system', content: COMPARE_JD_PROMPT },
+    { role: 'user', content: `Job Description:\n${jdText}\n\nCandidate Resume:\n${JSON.stringify(parsedResume, null, 2)}` }
+  ], true, 0.3);
+  if (!text) throw new Error('Failed to compare JD');
+  return JSON.parse(text);
+}

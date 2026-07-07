@@ -11,7 +11,12 @@ import {
   extractResumeDetails,
   generateF2FPlanAndFirstQuestion,
   evaluateF2FAnswer,
-  generateF2FNextQuestion
+  generateF2FNextQuestion,
+  extractFullResume,
+  evaluateAts,
+  optimizeResume,
+  generateCoverLetter,
+  compareJd
 } from './gemini';
 import { sendWelcomeEmail, sendInterviewReportEmail, sendWeeklyProgressEmail } from './emailService';
 
@@ -718,3 +723,100 @@ router.get('/cron/weekly-progress', async (req, res) => {
 });
 
 export default router;
+
+// Career Assistant Routes
+
+router.post('/career/extract', async (req, res) => {
+  try {
+    const { resumeText } = req.body;
+    if (!resumeText) return res.status(400).json({ error: 'resumeText is required' });
+    const data = await extractFullResume(resumeText);
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/career/evaluate-ats', async (req, res) => {
+  try {
+    const { parsedResume, targetRole } = req.body;
+    const data = await evaluateAts(parsedResume, targetRole);
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/career/optimize', async (req, res) => {
+  try {
+    const { parsedResume, additionalDetails, userId } = req.body;
+    const data = await optimizeResume(parsedResume, additionalDetails);
+    
+    if (userId) {
+      await addDoc(collection(db, 'resumes'), {
+        userId,
+        originalData: parsedResume,
+        optimizedData: data.optimizedResume,
+        oldAtsScore: data.oldAtsScore,
+        newAtsScore: data.newAtsScore,
+        created_at: serverTimestamp()
+      });
+    }
+
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/career/cover-letter', async (req, res) => {
+  try {
+    const { optimizedResume, targetRole, targetCompany, userId } = req.body;
+    const data = await generateCoverLetter(optimizedResume, targetRole, targetCompany);
+    
+    if (userId) {
+      await addDoc(collection(db, 'cover_letters'), {
+        userId,
+        targetRole,
+        targetCompany,
+        content: data.coverLetterText,
+        created_at: serverTimestamp()
+      });
+    }
+
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/career/match-jd', async (req, res) => {
+  try {
+    const { parsedResume, jdText } = req.body;
+    const data = await compareJd(parsedResume, jdText);
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/career/history', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+
+    const resumesQuery = query(collection(db, 'resumes'), where('userId', '==', userId), orderBy('created_at', 'desc'));
+    const resumesSnap = await getDocs(resumesQuery);
+    const resumes = resumesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const clQuery = query(collection(db, 'cover_letters'), where('userId', '==', userId), orderBy('created_at', 'desc'));
+    const clSnap = await getDocs(clQuery);
+    const coverLetters = clSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    res.json({ resumes, coverLetters });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+

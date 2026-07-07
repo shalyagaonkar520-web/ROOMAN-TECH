@@ -16,6 +16,7 @@ export default function DashboardOverview() {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState<any>(null);
   const [interviews, setInterviews] = useState<any[]>([]);
+  const [careerHistory, setCareerHistory] = useState<{resumes: any[], coverLetters: any[]}>({ resumes: [], coverLetters: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -47,8 +48,15 @@ export default function DashboardOverview() {
         interviewsJson = await interviewsRes.json();
       }
 
+      const careerRes = await fetch(`/api/career/history?userId=${user?.uid}`);
+      let careerJson = { resumes: [], coverLetters: [] };
+      if (careerRes.ok) {
+        careerJson = await careerRes.json();
+      }
+
       setAnalytics(analyticsJson);
       setInterviews(interviewsJson);
+      setCareerHistory(careerJson);
     } catch (e) {
       console.error('Error fetching dashboard analytics:', e);
     } finally {
@@ -95,6 +103,11 @@ export default function DashboardOverview() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Link to="/career-assistant">
+            <Button variant="outline" className="rounded-xl font-bold px-6 py-3 border-indigo-200 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 cursor-pointer">
+              Career Assistant
+            </Button>
+          </Link>
           <Link to="/setup">
             <Button className="rounded-xl shadow-lg bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700 border-0 font-bold px-6 py-3 cursor-pointer">
               Start New Interview
@@ -246,8 +259,62 @@ export default function DashboardOverview() {
             </Card>
           </div>
 
+          {/* Career Assistant History */}
+          {(careerHistory.resumes.length > 0 || careerHistory.coverLetters.length > 0) && (
+            <div className="space-y-4 pt-6">
+              <h3 className="text-xl font-bold flex items-center gap-2 pl-1">
+                <Briefcase className="w-5 h-5 text-indigo-500" />
+                Resume & Cover Letter History
+              </h3>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                {careerHistory.resumes.map((resume) => (
+                  <Card key={resume.id} className="glass-panel border-0 hover:shadow-2xl hover:scale-[1.005] transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="font-extrabold text-lg">Optimized Resume</h4>
+                          <div className="flex items-center text-xs text-slate-400 mt-1">
+                            <Calendar className="w-3.5 h-3.5 mr-1" />
+                            {new Date(resume.created_at?.seconds * 1000 || Date.now()).toLocaleDateString('en-US', { dateStyle: 'medium' })}
+                          </div>
+                        </div>
+                        <span className="text-xs font-black bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded">
+                          ATS Score: {resume.newAtsScore}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
+                        {resume.optimizedData?.careerObjective}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {careerHistory.coverLetters.map((cl) => (
+                  <Card key={cl.id} className="glass-panel border-0 hover:shadow-2xl hover:scale-[1.005] transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="font-extrabold text-lg">Cover Letter</h4>
+                          <p className="text-sm font-semibold text-indigo-500">{cl.targetRole} @ {cl.targetCompany}</p>
+                          <div className="flex items-center text-xs text-slate-400 mt-1">
+                            <Calendar className="w-3.5 h-3.5 mr-1" />
+                            {new Date(cl.created_at?.seconds * 1000 || Date.now()).toLocaleDateString('en-US', { dateStyle: 'medium' })}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 italic">
+                        "{cl.content.substring(0, 100)}..."
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* List of Previous Interviews */}
-          <div className="space-y-4">
+          <div className="space-y-4 pt-6">
             <h3 className="text-xl font-bold flex items-center gap-2 pl-1">
               <Calendar className="w-5 h-5 text-indigo-500" />
               Interview History
