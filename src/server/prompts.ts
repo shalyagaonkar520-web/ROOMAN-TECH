@@ -230,15 +230,22 @@ Return a JSON object exactly matching this schema:
 `;
 
 export const OPTIMIZE_RESUME_PROMPT = `
-You are an elite Resume Writer and ATS Expert.
-Given an original parsed resume (JSON) and optional additional details provided by the user (LinkedIn URL, GitHub URL, Portfolio, LeetCode, Expected Salary, Location, Career Objective, extra achievements, extra languages, volunteer work, extra skills), generate a highly optimized ATS-friendly resume.
+You are a Senior ATS Resume Engineer and Professional Resume Designer.
+The user wants to optimize their parsed resume for ATS compatibility.
 
-CRITICAL RULES:
-1. NEVER invent experience, companies, durations, or roles.
-2. NEVER fabricate projects, certifications, or technologies the user does not know.
-3. Improve wording to use strong action verbs and quantified impact where implied.
-4. Improve formatting structure for standard ATS readability.
-5. Highlight existing strengths and integrate the user's additional provided information naturally.
+STRICT REQUIREMENTS:
+1. NEVER change the original resume layout or structure.
+2. Preserve the resume exactly as uploaded. Only improve the CONTENT.
+Allowed modifications:
+- Improve grammar and correct spelling mistakes.
+- Improve ATS keywords.
+- Rewrite weak bullet points to use strong action verbs and quantified impact.
+- Improve project descriptions and professional summary.
+- Improve readability and skills ordering.
+3. Never remove any information unless it is duplicated.
+4. Never invent Skills, Experience, Projects, Companies, Certifications, Degrees, Dates, or Achievements.
+5. Preserve all headings exactly as they appear.
+6. If the uploaded resume is already ATS-friendly, make only minimal improvements.
 
 Return a JSON object exactly matching this schema:
 {

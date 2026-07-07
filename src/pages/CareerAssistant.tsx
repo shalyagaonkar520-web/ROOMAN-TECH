@@ -122,7 +122,7 @@ export default function CareerAssistant() {
     } catch (err) {
       console.error(err);
       alert('Failed to optimize resume');
-      setStep(6);
+      setStep(5);
     } finally {
       setIsOptimizing(false);
     }
@@ -344,7 +344,7 @@ export default function CareerAssistant() {
                 <p className="text-indigo-100 mb-8 max-w-lg mx-auto">Let our AI rewrite your resume to include industry keywords, fix formatting issues, and highlight your strengths professionally.</p>
                 <div className="flex justify-center gap-4">
                   <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => setStep(8)}>Skip</Button>
-                  <Button className="bg-white text-indigo-600 hover:bg-slate-50 font-bold px-8" onClick={() => setStep(6)}>
+                  <Button className="bg-white text-indigo-600 hover:bg-slate-50 font-bold px-8" onClick={handleOptimization}>
                     Optimize Resume
                   </Button>
                 </div>
@@ -352,47 +352,6 @@ export default function CareerAssistant() {
             </motion.div>
           )}
 
-          {/* STEP 6: OPTIONAL DETAILS FORM */}
-          {step === 6 && (
-            <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
-              <div className="text-center mb-10">
-                <h2 className="text-3xl font-bold mb-3 dark:text-white">Let's supercharge your profile</h2>
-                <p className="text-slate-500">Provide any missing links or details. We will seamlessly integrate them into your optimized resume. (All fields optional)</p>
-              </div>
-
-              <Card className="bg-white dark:bg-slate-900 shadow-xl border-slate-200 dark:border-slate-800">
-                <CardContent className="p-8 space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center"><Link2 className="w-4 h-4 mr-2"/> LinkedIn URL</label>
-                      <input type="text" className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 dark:text-white" value={optDetails.linkedin} onChange={e => setOptDetails({...optDetails, linkedin: e.target.value})} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center"><Code className="w-4 h-4 mr-2"/> GitHub URL</label>
-                      <input type="text" className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 dark:text-white" value={optDetails.github} onChange={e => setOptDetails({...optDetails, github: e.target.value})} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center"><DollarSign className="w-4 h-4 mr-2"/> Expected Salary</label>
-                      <input type="text" className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 dark:text-white" value={optDetails.expectedSalary} onChange={e => setOptDetails({...optDetails, expectedSalary: e.target.value})} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center"><MapPin className="w-4 h-4 mr-2"/> Preferred Location</label>
-                      <input type="text" className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 dark:text-white" value={optDetails.preferredLocation} onChange={e => setOptDetails({...optDetails, preferredLocation: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center"><Target className="w-4 h-4 mr-2"/> Career Objective (We will rewrite it beautifully)</label>
-                    <textarea rows={3} className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 dark:text-white" value={optDetails.careerObjective} onChange={e => setOptDetails({...optDetails, careerObjective: e.target.value})} />
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <Button variant="outline" onClick={handleOptimization}>Skip & Optimize</Button>
-                    <Button variant="primary" onClick={handleOptimization}>Generate Optimized Resume <ArrowRight className="w-4 h-4 ml-2"/></Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
 
           {/* STEP 7: OPTIMIZING LOADING */}
           {step === 7 && (
