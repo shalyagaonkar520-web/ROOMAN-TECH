@@ -34,19 +34,7 @@ export default function Layout() {
             </Link>
             
             <div className="flex items-center space-x-6">
-              {user && (
-                <Link 
-                  to="/dashboard" 
-                  className={`text-sm font-semibold flex items-center space-x-2 transition-colors ${
-                    location.pathname === '/dashboard' 
-                    ? 'text-indigo-600 dark:text-indigo-400' 
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </Link>
-              )}
+
 
               {user && (
                 <Link 

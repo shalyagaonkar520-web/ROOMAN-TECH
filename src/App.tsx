@@ -8,7 +8,7 @@ import Interview from './pages/Interview';
 import FaceToFaceInterview from './pages/FaceToFaceInterview';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import DashboardOverview from './pages/DashboardOverview';
+
 import ManualTest from './pages/ManualTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import SplashScreen from './components/SplashScreen';
@@ -18,7 +18,7 @@ import { useStore } from './store/useStore';
 function SmartRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
-  return user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+  return user ? <Navigate to="/career-assistant" replace /> : <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -67,11 +67,7 @@ export default function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-          <Route path="dashboard" element={
-            <ProtectedRoute>
-              <DashboardOverview />
-            </ProtectedRoute>
-          } />
+
           <Route path="manual-test" element={
             <ProtectedRoute>
               <ManualTest />
