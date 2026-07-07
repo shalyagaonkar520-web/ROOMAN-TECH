@@ -121,7 +121,7 @@ export default function Layout() {
               <span>Rooman AI Interviewer © 2026</span>
             </div>
             <div className="flex items-center space-x-6">
-               <span>Powered by Gemini AI</span>
+               <span>Powered by Rooman Technologies</span>
                <a href="https://github.com/shalyagaonkar520-web/ROOMAN-TECH" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-slate-200 flex items-center">
                  <Laptop className="w-4 h-4 mr-1" /> View Source
                </a>
