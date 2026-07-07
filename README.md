@@ -5,7 +5,7 @@
 # Duration    ~15–20s
 > **⚠️ Important Notice**
 >
-> **Please allow up to 2 minutes for the AI Career Assistant to initialize on your first visit.**
+> # Please allow up to 2 minutes for the AI Career Assistant to initialize on your first visit.
 >
 > During the initial startup, ROOMAN loads and prepares multiple AI services to provide a premium experience, including:
 >
