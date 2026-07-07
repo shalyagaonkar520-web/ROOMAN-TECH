@@ -36,7 +36,128 @@ https://rooman-tech-staging.up.railway.app/
 https://github.com/shalyagaonkar520-web/ROOMAN-TECH
 
 ---
+# 🧪 Testing
 
+ROOMAN AI Interview Platform includes automated tests using **Vitest**, **React Testing Library**, and **Supertest**.
+
+## Run All Tests
+
+```bash
+npm install
+npm run test:run
+```
+
+or
+
+```bash
+npm test
+```
+
+---
+
+## Test Coverage
+
+The project includes automated tests for the following modules:
+
+- ✅ Smoke Test
+- ✅ Google Authentication
+- ✅ Resume Upload
+- ✅ ATS Analysis
+- ✅ Resume Enhancer
+- ✅ Cover Letter Generator
+- ✅ AI Interview Agent
+- ✅ Face-to-Face Interview
+- ✅ Firebase Integration
+- ✅ API Upload Endpoint
+- ✅ API Interview Endpoint
+- ✅ End-to-End Integration Flow
+
+---
+
+## Test Files
+
+```
+tests/
+├── smoke.test.tsx
+├── authentication.test.tsx
+├── resume-upload.test.tsx
+├── ats-analysis.test.tsx
+├── resume-enhancer.test.ts
+├── cover-letter.test.ts
+├── interview-agent.test.ts
+├── face-to-face.test.tsx
+├── api-upload.test.ts
+├── api-interview.test.ts
+├── firebase.test.ts
+├── integration.test.tsx
+```
+
+---
+
+## Expected Result
+
+Running the test suite should produce output similar to:
+
+```text
+Test Files  12 passed (12)
+Tests       26 passed (26)
+Duration    ~15–20s
+```
+
+---
+
+## Manual Testing
+
+The application can also be tested through the live deployment.
+
+### Career Assistant
+
+- Upload Resume (PDF/DOCX)
+- Select Target Role (Optional)
+- Upload Job Description (Optional)
+- Review ATS Score
+- Review Resume Match
+- Review Missing Keywords
+- Generate Cover Letter
+- Download Cover Letter
+
+### Resume Enhancer
+
+- Upload Resume
+- Review AI Suggestions
+- Optimize Resume
+- Download Optimized Resume
+
+### AI Mock Interview
+
+- Select Interview Type
+- Answer AI-generated Questions
+- Review AI Evaluation
+- View Final Report
+
+### Face-to-Face Interview
+
+- Allow Camera & Microphone
+- Upload Resume (Optional)
+- Upload Job Description (Optional)
+- AI generates personalized questions
+- Complete interview
+- Review analytics
+
+### Downloads
+
+Verify successful generation of:
+
+- ATS Report
+- Interview Report
+- Optimized Resume
+- Cover Letter
+
+---
+
+## Continuous Integration
+
+GitHub Actions automatically executes the complete test suite on every push and pull request to ensure application stability.
 # 🌟 Overview
 
 ROOMAN AI Interview Platform is an AI-powered career assistant that helps job seekers prepare for interviews, optimize resumes, improve ATS scores, and receive personalized career guidance.
