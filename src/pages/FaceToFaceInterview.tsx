@@ -586,7 +586,8 @@ export default function FaceToFaceInterview() {
     if (isLoading || !interview) return;
 
     if (welcomeStage === 'active' && !subtitleText) {
-      const name = (interview as any).candidate_name || "there";
+      const rawName = (interview as any).candidate_name || "there";
+      const name = rawName.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
       const introCheckText = `Hello ${name}! Good morning. My name is Sarah. I'll be your interviewer today representing ${interview.company}. I have carefully reviewed your resume and the job description. Let's begin. ${currentQuestion?.question_text || ''}`;
       setSubtitleText(introCheckText);
       speakText(introCheckText);
@@ -1038,7 +1039,7 @@ export default function FaceToFaceInterview() {
                   autoPlay 
                   playsInline 
                   muted 
-                  className="absolute inset-0 w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-500"
+                  className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
                 />
               )}
               <canvas 

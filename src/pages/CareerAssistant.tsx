@@ -365,13 +365,6 @@ export default function CareerAssistant() {
               {/* Action Buttons */}
               <div className="flex flex-wrap justify-center gap-4 mb-10">
                 <Button 
-                  onClick={handleOptimization}
-                  disabled={isOptimizing}
-                  className="bg-white text-indigo-600 hover:bg-slate-50 font-bold border border-indigo-200 shadow-sm"
-                >
-                  <FileText className="w-4 h-4 mr-2"/> {isOptimizing ? 'Optimizing Layout...' : 'Optimize Resume for ATS'}
-                </Button>
-                <Button 
                   onClick={generateCoverLetterFlow}
                   className="bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30"
                 >
@@ -410,38 +403,7 @@ export default function CareerAssistant() {
                 </Card>
               )}
 
-              {/* Optimized Resume Display */}
-              {optimizedData && (
-                <Card className="bg-white dark:bg-slate-900 shadow-xl border-indigo-500 mb-10">
-                  <CardContent className="p-8">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-xl font-bold dark:text-white">Optimized Resume Ready</h3>
-                      <div className="flex gap-3">
-                        <Button onClick={() => {
-                          const blob = generatePdfResume(optimizedData);
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url; a.download = 'Optimized_Resume.pdf'; a.click();
-                        }} className="bg-rose-500 hover:bg-rose-600 text-white">
-                          <Download className="w-4 h-4 mr-2"/> Download PDF
-                        </Button>
-                        <Button onClick={() => {
-                          const blob = generateDocxResume(optimizedData);
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url; a.download = 'Optimized_Resume.docx'; a.click();
-                        }} className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Download className="w-4 h-4 mr-2"/> Download DOCX
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl mb-4 text-amber-800 dark:text-amber-400 text-sm">
-                      <AlertCircle className="w-5 h-5 inline mr-2" />
-                      <strong>Note:</strong> We applied standard ATS-friendly formatting as per technical constraints, ensuring 100% parsability while retaining all improved content.
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+
             </motion.div>
           )}
 
