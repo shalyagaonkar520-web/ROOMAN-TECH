@@ -144,7 +144,7 @@ router.get('/interviews', async (req, res) => {
 router.post('/interviews', async (req, res) => {
   let { role, difficulty, numQuestions, yearsExperience, programmingLanguage, skills, interviewType, resumeText, jdText, mode = 'premium', company, candidateName, userId, email } = req.body;
   if (mode === 'premium') {
-    numQuestions = 30;
+    numQuestions = 10;
   }
   if (!role || !difficulty || !numQuestions || !yearsExperience || !programmingLanguage || !skills || !interviewType) {
     res.status(400).json({ error: 'Missing required fields' });

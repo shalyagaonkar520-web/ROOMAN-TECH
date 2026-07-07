@@ -721,7 +721,7 @@ export default function FaceToFaceInterview() {
     cleanAnswer = cleanAnswer.replace(/(i'm finished|im finished|i am finished|finished|i'm done|im done|i am done)[\s.]*$/gi, '').trim();
 
     if (!cleanAnswer && !forceNext) {
-      cleanAnswer = "No response provided.";
+      cleanAnswer = "";
     }
     
     stopSpeechRecognition();
@@ -730,8 +730,8 @@ export default function FaceToFaceInterview() {
     window.speechSynthesis.cancel();
 
     // Transcript Quality Intelligence check
-    const wordCount = cleanAnswer.split(/\s+/).filter(w => w.length > 0).length;
-    if (!forceNext && wordCount < 4 && cleanAnswer !== "No response provided.") {
+    const wordCount = cleanAnswer ? cleanAnswer.split(/\s+/).filter(w => w.length > 0).length : 0;
+    if (!forceNext && wordCount < 4) {
        const phrases = [
          "I couldn't hear you clearly. Could you please repeat that?",
          "Could you please speak a little louder? I missed some words.",
@@ -961,7 +961,7 @@ export default function FaceToFaceInterview() {
       </AnimatePresence>
 
       {/* Main Workspace split screen */}
-      <div className="flex-1 grid md:grid-cols-2 gap-6 p-6 items-stretch">
+      <div className="order-3 flex-1 grid md:grid-cols-2 gap-6 p-6 items-stretch">
         
         {/* Left Grid: AI Interviewer Sarah */}
         <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col justify-between min-h-[420px] bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/20 via-transparent to-transparent">
@@ -985,7 +985,11 @@ export default function FaceToFaceInterview() {
             <div className="relative">
               <div className={`absolute -inset-4 rounded-full bg-gradient-to-tr ${theme.accent} opacity-20 blur-md transition-all duration-1000 ${isAISpeaking ? 'scale-125' : 'scale-100'}`} />
               <div className="w-32 h-32 rounded-full border border-slate-800 bg-slate-950 flex items-center justify-center relative overflow-hidden shadow-xl">
-                <Sparkles className={`w-14 h-14 ${theme.text} ${isAISpeaking ? 'animate-pulse' : ''}`} />
+                <img 
+                  src="https://api.dicebear.com/7.x/bottts/svg?seed=Sarah&backgroundColor=1e293b" 
+                  alt="AI Interviewer" 
+                  className={`w-full h-full object-cover transition-all duration-300 ${isAISpeaking ? 'scale-110' : 'scale-100 opacity-80'}`}
+                />
               </div>
             </div>
             
@@ -1064,25 +1068,7 @@ export default function FaceToFaceInterview() {
 
             {/* Right side: Transcribed Caption & Performance Metrics */}
             <div className="flex flex-col justify-between space-y-4">
-              {/* Gauges Grid */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Confidence</span>
-                  <span className="text-xs font-black text-indigo-400 mt-0.5">{metrics.confidence}%</span>
-                </div>
-                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Eye Contact</span>
-                  <span className="text-xs font-black text-cyan-400 mt-0.5">{Math.floor(metrics.eyeContact)}%</span>
-                </div>
-                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Speech Speed</span>
-                  <span className="text-xs font-black text-purple-400 mt-0.5">{metrics.wpm} WPM</span>
-                </div>
-                <div className="bg-slate-950/80 border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[8px] uppercase tracking-wider text-slate-500 font-extrabold">Filler Words</span>
-                  <span className="text-xs font-black text-rose-400 mt-0.5">{metrics.fillers}</span>
-                </div>
-              </div>
+              {/* Gauges Grid (Removed as requested) */}
 
               {/* Transcribed Candidate Answer Caption */}
               <div className="flex-1 bg-slate-950 border border-white/5 rounded-2xl p-4 flex items-center justify-center shadow-lg min-h-[120px]">
@@ -1097,7 +1083,7 @@ export default function FaceToFaceInterview() {
       </div>
 
       {/* Control panel & Action overrides */}
-      <div className="p-6 bg-slate-900 border-t border-slate-800/80 backdrop-blur-md">
+      <div className="order-2 p-4 bg-slate-900 border-y border-slate-800/80 backdrop-blur-md z-30 sticky top-0 shadow-xl">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           
           {/* Left indicator: current status */}
