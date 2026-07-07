@@ -984,11 +984,18 @@ export default function FaceToFaceInterview() {
           <div className="flex flex-col items-center justify-center text-center space-y-4 z-10 py-6">
             <div className="relative">
               <div className={`absolute -inset-4 rounded-full bg-gradient-to-tr ${theme.accent} opacity-20 blur-md transition-all duration-1000 ${isAISpeaking ? 'scale-125' : 'scale-100'}`} />
-              <div className="w-32 h-32 rounded-full border border-slate-800 bg-slate-950 flex items-center justify-center relative overflow-hidden shadow-xl">
-                <img 
-                  src="https://api.dicebear.com/7.x/bottts/svg?seed=Sarah&backgroundColor=1e293b" 
-                  alt="AI Interviewer" 
-                  className={`w-full h-full object-cover transition-all duration-300 ${isAISpeaking ? 'scale-110' : 'scale-100 opacity-80'}`}
+              <div className="w-48 h-48 rounded-full border border-slate-800 bg-slate-950 flex items-center justify-center relative overflow-hidden shadow-2xl">
+                <video 
+                  ref={(el) => {
+                    if (el) {
+                      isAISpeaking ? el.play() : el.pause();
+                    }
+                  }}
+                  loop 
+                  muted 
+                  playsInline 
+                  className={`w-full h-full object-cover transition-all duration-300 ${isAISpeaking ? 'scale-110 brightness-110' : 'scale-100 brightness-75'}`}
+                  src="https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-video-call-40995-large.mp4"
                 />
               </div>
             </div>

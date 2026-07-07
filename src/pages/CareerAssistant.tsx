@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { generatePdfResume, generateDocxResume, generatePdfCoverLetter } from '../utils/documentGenerator';
+import { generatePdfCoverLetter } from '../utils/documentGenerator';
 import { useAuth } from '../contexts/AuthContext';
 
 const JOB_ROLES = [
@@ -106,35 +106,13 @@ export default function CareerAssistant() {
     }
   };
 
-  const handleOptimization = async () => {
-    setStep(7);
-    setIsOptimizing(true);
-    
-    try {
-      const res = await fetch('/api/career/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parsedResume, additionalDetails: optDetails, userId: user?.uid })
-      });
-      const data = await res.json();
-      setOptimizedData(data);
-      setStep(8);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to optimize resume');
-      setStep(5);
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
-
   const generateCoverLetterFlow = async () => {
     try {
       const res = await fetch('/api/career/cover-letter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          optimizedResume: optimizedData.optimizedResume, 
+          optimizedResume: parsedResume, 
           targetRole, 
           targetCompany: 'Target Company',
           userId: user?.uid
@@ -149,7 +127,7 @@ export default function CareerAssistant() {
   };
 
   const handleStartInterview = () => {
-    navigate('/setup', { state: { optimizedResume: optimizedData.optimizedResume, targetRole } });
+    navigate('/setup', { state: { optimizedResume: parsedResume, targetRole } });
   };
 
   return (
@@ -338,98 +316,33 @@ export default function CareerAssistant() {
                 </Card>
               </div>
 
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-8 text-white text-center shadow-xl">
-                <Sparkles className="w-12 h-12 mx-auto mb-4 text-indigo-200" />
-                <h3 className="text-2xl font-bold mb-3">Your ATS score can be improved</h3>
-                <p className="text-indigo-100 mb-8 max-w-lg mx-auto">Let our AI rewrite your resume to include industry keywords, fix formatting issues, and highlight your strengths professionally.</p>
-                <div className="flex justify-center gap-4">
-                  <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => setStep(8)}>Skip</Button>
-                  <Button className="bg-white text-indigo-600 hover:bg-slate-50 font-bold px-8" onClick={handleOptimization}>
-                    Optimize Resume
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-
-          {/* STEP 7: OPTIMIZING LOADING */}
-          {step === 7 && (
-            <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto text-center mt-20">
-              <div className="relative w-32 h-32 mx-auto mb-8">
-                <div className="absolute inset-0 border-4 border-indigo-200 dark:border-indigo-900 rounded-full" />
-                <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center"><Zap className="w-10 h-10 text-indigo-500 animate-pulse" /></div>
-              </div>
-              <h2 className="text-2xl font-bold mb-4 dark:text-white">Rewriting Resume...</h2>
-              <p className="text-slate-500">Enhancing action verbs, injecting ATS keywords, and polishing formatting without hallucinating data.</p>
-            </motion.div>
-          )}
-
-          {/* STEP 8 & 9: COMPARISON & PREVIEW */}
-          {step === 8 && optimizedData && (
-            <motion.div key="step8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto w-full">
-              <div className="text-center mb-10">
-                <h2 className="text-4xl font-extrabold mb-4 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">Resume Optimized</h2>
-                <p className="text-slate-500 text-lg">Your new ATS-friendly resume is ready to conquer job applications.</p>
-              </div>
-
-              {/* Comparison Stats */}
-              <div className="grid md:grid-cols-4 gap-4 mb-10">
-                <Card className="bg-white dark:bg-slate-900 shadow-md">
-                  <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ATS Score</span>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl font-bold text-slate-400 line-through">{optimizedData.oldAtsScore}</span>
-                      <ArrowRight className="w-5 h-5 text-indigo-400" />
-                      <span className="text-4xl font-black text-indigo-500">{optimizedData.newAtsScore}</span>
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl mb-10">
+                <h3 className="text-xl font-bold mb-6 flex items-center dark:text-white">
+                  <Sparkles className="w-6 h-6 mr-3 text-indigo-500" />
+                  Actionable Suggestions to Improve your ATS Score
+                </h3>
+                <div className="space-y-4">
+                  {atsData.actionableSuggestions?.map((suggestion: string, i: number) => (
+                    <div key={i} className="flex items-start p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">
+                        {i + 1}
+                      </div>
+                      <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">{suggestion}</p>
                     </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white dark:bg-slate-900 shadow-md">
-                  <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Match Increase</span>
-                    <span className="text-4xl font-black text-emerald-500">+{optimizedData.resumeMatchIncrease}%</span>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white dark:bg-slate-900 shadow-md md:col-span-2">
-                  <CardContent className="p-4 h-full flex flex-col justify-center">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Improvements</span>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">✨ {optimizedData.keywordImprovement}</p>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">📐 {optimizedData.formattingImprovement}</p>
-                  </CardContent>
-                </Card>
+                  ))}
+                  {(!atsData.actionableSuggestions || atsData.actionableSuggestions.length === 0) && (
+                    <p className="text-slate-500 italic">No major suggestions. Your resume is highly optimized!</p>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap justify-center gap-4 mb-10">
                 <Button 
-                  onClick={() => {
-                    const blob = generatePdfResume(optimizedData.optimizedResume);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'Optimized_Resume.pdf'; a.click();
-                  }}
-                  className="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800/30"
-                >
-                  <Download className="w-4 h-4 mr-2"/> Download PDF
-                </Button>
-                <Button 
-                  onClick={async () => {
-                    const blob = await generateDocxResume(optimizedData.optimizedResume);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'Optimized_Resume.docx'; a.click();
-                  }}
-                  className="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800/30"
-                >
-                  <Download className="w-4 h-4 mr-2"/> Download DOCX
-                </Button>
-                <Button 
                   onClick={generateCoverLetterFlow}
                   className="bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30"
                 >
-                  <FileText className="w-4 h-4 mr-2"/> Generate Cover Letter
+                  <FileText className="w-4 h-4 mr-2"/> Generate Custom Cover Letter
                 </Button>
                 <Button onClick={handleStartInterview} className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
                   <User className="w-4 h-4 mr-2"/> Start AI Interview
@@ -448,7 +361,7 @@ export default function CareerAssistant() {
                         const a = document.createElement('a');
                         a.href = url; a.download = 'Cover_Letter.pdf'; a.click();
                       }} variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2"/> PDF
+                        <Download className="w-4 h-4 mr-2"/> Download PDF
                       </Button>
                     </div>
                     <div className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 font-serif leading-relaxed bg-slate-50 dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800">

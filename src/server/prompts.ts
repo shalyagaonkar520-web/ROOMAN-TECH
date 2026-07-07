@@ -210,20 +210,16 @@ If a field is not found in the text, return an empty string or empty array as ap
 export const EVALUATE_ATS_PROMPT = `
 You are an elite Tech Recruiter and ATS Expert.
 Given the extracted resume JSON and a target job role, analyze the resume against the latest industry standards and ATS expectations for that specific role.
+Provide highly specific, actionable suggestions so the user can manually edit their own resume. 
+Point out exact missing keywords, weak verbs, or missing sections.
 Return a JSON object exactly matching this schema:
 {
   "atsScore": number, // 0-100
   "resumeMatchPercentage": number, // 0-100
   "hiringProbability": number, // 0-100
-  "strengths": ["string"],
-  "weaknesses": ["string"],
+  "actionableSuggestions": ["string"], // 5-8 highly specific suggestions to improve ATS
   "missingKeywords": ["string"],
-  "missingSkills": ["string"],
-  "missingProjects": ["string"],
-  "missingCertifications": ["string"],
   "formattingIssues": ["string"],
-  "grammarIssues": ["string"],
-  "recruiterReadabilityScore": number, // 0-100
   "experienceLevel": "string", // e.g., "Junior", "Mid-Level", "Senior"
   "industryReadiness": "string"
 }
