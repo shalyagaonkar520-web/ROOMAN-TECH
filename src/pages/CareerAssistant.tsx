@@ -83,9 +83,51 @@ export default function CareerAssistant() {
     }
   };
 
-  const handleRoleSelection = (role: string) => {
+  const handleRoleSelection = async (role: string) => {
     setTargetRole(role);
-    navigate('/setup', { state: { optimizedResume: parsedResume, targetRole: role } });
+    setStep(4);
+    setIsEvaluating(true);
+    
+    try {
+      const res = await fetch('/api/career/evaluate-ats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parsedResume, targetRole: role })
+      });
+      const data = await res.json();
+      setAtsData(data);
+      setStep(5);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to evaluate ATS score');
+      setStep(3);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  const generateCoverLetterFlow = async () => {
+    try {
+      const res = await fetch('/api/career/cover-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          optimizedResume: parsedResume, 
+          targetRole, 
+          targetCompany: 'Target Company',
+          userId: user?.uid
+        })
+      });
+      const data = await res.json();
+      setCoverLetter(data.coverLetterText);
+      alert('Cover Letter Generated! You can now download it.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStartInterview = () => {
+    navigate('/setup', { state: { optimizedResume: parsedResume, targetRole } });
   };
 
   return (
@@ -97,7 +139,24 @@ export default function CareerAssistant() {
 
       <div className="w-full max-w-5xl z-10">
         
-
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
+            <span>Upload</span>
+            <span>Target Role</span>
+            <span>ATS Check</span>
+            <span>Optimize</span>
+            <span>Result</span>
+          </div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+            <motion.div 
+              className="bg-indigo-500 h-full rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${(step / 9) * 100}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        </div>
 
         <AnimatePresence mode="wait">
           
@@ -194,7 +253,125 @@ export default function CareerAssistant() {
             </motion.div>
           )}
 
+          {/* STEP 4: ANALYZING ATS */}
+          {step === 4 && (
+            <motion.div key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto text-center mt-20">
+              <div className="w-24 h-24 mx-auto border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-8" />
+              <h2 className="text-2xl font-bold mb-4 dark:text-white">Scanning ATS Patterns...</h2>
+              <p className="text-slate-500">Comparing your resume against thousands of successful {targetRole} applications.</p>
+            </motion.div>
+          )}
 
+          {/* STEP 5: ATS DASHBOARD */}
+          {step === 5 && atsData && (
+            <motion.div key="step5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-end mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold dark:text-white mb-2">ATS Analysis Report</h2>
+                  <p className="text-slate-500">Targeting: <span className="font-semibold text-indigo-500">{targetRole}</span></p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <Card className="bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/30 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-5xl font-black text-indigo-500 mb-2">{atsData.atsScore}/100</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300">ATS Score</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white dark:bg-slate-900 border-emerald-100 dark:border-emerald-900/30 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-5xl font-black text-emerald-500 mb-2">{atsData.resumeMatchPercentage}%</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300">Role Match</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white dark:bg-slate-900 border-amber-100 dark:border-amber-900/30 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-5xl font-black text-amber-500 mb-2">{atsData.hiringProbability}%</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300">Hiring Probability</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-10">
+                <Card className="bg-white dark:bg-slate-900">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center"><TrendingUp className="w-5 h-5 mr-2 text-emerald-500"/> Strengths</h3>
+                    <ul className="space-y-3">
+                      {atsData.strengths?.map((s: string, i: number) => (
+                        <li key={i} className="flex items-start text-sm text-slate-600 dark:text-slate-300"><CheckCircle2 className="w-4 h-4 mr-2 mt-0.5 text-emerald-500 shrink-0"/>{s}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white dark:bg-slate-900 border-red-100 dark:border-red-900/30">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center"><AlertCircle className="w-5 h-5 mr-2 text-red-500"/> Missing Keywords</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {atsData.missingKeywords?.map((kw: string, i: number) => (
+                        <span key={i} className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg border border-red-100 dark:border-red-800/30">{kw}</span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl mb-10">
+                <h3 className="text-xl font-bold mb-6 flex items-center dark:text-white">
+                  <Sparkles className="w-6 h-6 mr-3 text-indigo-500" />
+                  Actionable Suggestions to Improve your ATS Score
+                </h3>
+                <div className="space-y-4">
+                  {atsData.actionableSuggestions?.map((suggestion: string, i: number) => (
+                    <div key={i} className="flex items-start p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">
+                        {i + 1}
+                      </div>
+                      <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">{suggestion}</p>
+                    </div>
+                  ))}
+                  {(!atsData.actionableSuggestions || atsData.actionableSuggestions.length === 0) && (
+                    <p className="text-slate-500 italic">No major suggestions. Your resume is highly optimized!</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap justify-center gap-4 mb-10">
+                <Button 
+                  onClick={generateCoverLetterFlow}
+                  className="bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30"
+                >
+                  <FileText className="w-4 h-4 mr-2"/> Generate Custom Cover Letter
+                </Button>
+                <Button onClick={handleStartInterview} className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
+                  <User className="w-4 h-4 mr-2"/> Start AI Interview
+                </Button>
+              </div>
+
+              {/* Cover Letter Modal / Display */}
+              {coverLetter && (
+                <Card className="bg-white dark:bg-slate-900 shadow-xl border-emerald-500 mb-10">
+                  <CardContent className="p-8">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold dark:text-white">Generated Cover Letter</h3>
+                      <Button onClick={() => {
+                        const blob = generatePdfCoverLetter(coverLetter);
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'Cover_Letter.pdf'; a.click();
+                      }} variant="outline" size="sm">
+                        <Download className="w-4 h-4 mr-2"/> Download PDF
+                      </Button>
+                    </div>
+                    <div className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 font-serif leading-relaxed bg-slate-50 dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {coverLetter}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </motion.div>
+          )}
 
         </AnimatePresence>
       </div>
