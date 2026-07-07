@@ -1,85 +1,132 @@
-# Rooman AI Interview Agent
+# 🚀 ROOMAN AI Interview Platform
 
-An end-to-end AI agent built for the **24-Hour AI Agent Challenge** by Rooman Technologies Pvt. Ltd.
+> **⚠️ Important Notice**
+>
+> **Please allow up to 2 minutes for the AI Career Assistant to initialize on your first visit.**
+>
+> During the initial startup, ROOMAN loads and prepares multiple AI services to provide a premium experience, including:
+>
+> - 🤖 AI Career Assistant
+> - 🎥 Face-to-Face AI Interview
+> - 🧪 Test Generation based on Job Description
+> - 📄 Resume Analysis
+> - 📝 Cover Letter Generator
+> - 📊 ATS Score & Resume Matching
+> - 💼 Job Description Analysis
+> - 🎤 AI Mock Interview
+>
+> ⏳ **This initialization happens only once when the application starts.**
+>
+> After the AI services are ready, all resume analysis, interview generation, and report generation requests will be significantly faster.
+>
+> **Thank you for your patience and enjoy your AI-powered interview experience! ❤️**
 
-**Track Selected**: Interview Agent (Intermediate)
-**Score Goal**: 100/100
+---
+# RUN THE AGENT 
+# 🌐 Live Demo just open the link 
 
-## 🎯 The Agent's Job
+**Railway Deployment**
 
-> "My agent takes a user's target role, experience, and uploaded resume, and produces a dynamic, fully interactive mock interview complete with real-time AI voice synthesis, followed by a comprehensive, scored evaluation report outlining their strengths and gaps."
+https://rooman-tech-staging.up.railway.app/
 
 ---
 
-## 🚀 Setup & Execution (How to Run)
+# 💻 GitHub Repository
 
-### 1. Prerequisites
-- Node.js (v18+)
-- A Google Gemini API Key
-
-### 2. Installation
-```bash
-# Install dependencies
-npm install
-
-# Create environment file
-touch .env
-```
-
-### 3. Configuration
-Add your Gemini API key to the `.env` file at the root of the project:
-```env
-GEMINI_API_KEY="your_google_gemini_api_key_here"
-```
-
-### 4. Run the Agent
-```bash
-npm run dev
-```
-Navigate to `http://localhost:3000` in your browser. The app runs a Vite React frontend and an Express backend simultaneously.
+https://github.com/shalyagaonkar520-web/ROOMAN-TECH
 
 ---
 
-## 📦 Agent-Specific Deliverables
-As required by the **Interview Agent (Intermediate)** track, the deliverables are included in this repository:
+# 🌟 Overview
 
-1. **A transcript of one full mock interview**
-2. **Scores for each question**
-3. **Final evaluation summary**
+ROOMAN AI Interview Platform is an AI-powered career assistant that helps job seekers prepare for interviews, optimize resumes, improve ATS scores, and receive personalized career guidance.
 
-👉 **View the Deliverable**: [SAMPLE_INTERVIEW.md](./SAMPLE_INTERVIEW.md)
+Instead of offering only mock interviews, ROOMAN provides an end-to-end career preparation experience by combining AI resume analysis, ATS optimization, interview simulation, analytics, and personalized feedback into one platform.
 
----
-
-## 🛠️ Architecture & Workflow
-
-The agent follows a strict **Input → Think → Act → Output** cycle:
-1. **Input**: User provides role, difficulty, and resume.
-2. **Think (Generate)**: Backend uses `gemini-2.5-pro` to dynamically generate 5 highly specific technical questions based on the exact resume payload.
-3. **Act (Interview)**: The frontend conducts the interview using either text (Manual Mode) or voice/webcam (Face-to-Face Mode) using native Web Speech APIs.
-4. **Think (Evaluate)**: The backend evaluates the candidate's answer against the generated "ideal answer", assigning a score out of 100.
-5. **Output**: The system synthesizes the entire transcript and returns a structured JSON evaluation, plotting the candidate's skills on a React Recharts heatmap and generating a "Hire Probability".
+Whether you're a fresher, student, or experienced professional, ROOMAN helps you become interview-ready with actionable insights and AI-powered recommendations.
 
 ---
 
-## 🤔 Design Choices & Tradeoffs
+# ✨ Key Features
 
-### 1. Model Choice: Google Gemini 2.5 Pro
-**Why**: I chose `gemini-2.5-pro` because of its massive context window (ideal for parsing long resumes and past interview transcripts) and its exceptional speed in returning structured JSON. 
-**Tradeoff**: While GPT-4o is slightly better at deep reasoning, Gemini's speed-to-cost ratio and native structured JSON output made it the perfect fit for a real-time interview loop where latency matters.
+## 🤖 AI Career Assistant
 
-### 2. Voice & Audio: Web Speech API vs. External TTS
-**Why**: Instead of using ElevenLabs or OpenAI TTS which cost money and introduce latency, I used the native browser `window.speechSynthesis` and `webkitSpeechRecognition`.
-**Tradeoff**: The voice sounds slightly robotic and relies on browser support (best on Chrome), but it enables completely free, instantaneous, offline-capable voice interactions.
-
-### 3. Tech Stack: React + Express (Monorepo)
-**Why**: A unified TypeScript stack allows sharing types between the frontend and backend.
-**Tradeoff**: Using a meta-framework like Next.js could have simplified routing, but a decoupled Express backend demonstrates clearer "glue code" around the AI model and allows for cleaner integration of SQLite for the database requirement.
+- AI-powered career guidance
+- Personalized interview preparation
+- Role-based recommendations
+- Smart career insights
 
 ---
 
-## ✨ Features
-- **Smart Parsing**: Contextual questions based on your uploaded resume.
-- **Strict JSON Parsing**: Robust Zod schemas guarantee the AI never breaks the UI.
-- **Cinematic UI**: Built with Framer Motion and Tailwind CSS for a premium, high-stakes interview feel.
-- **Real-Time Proctoring**: (Bonus feature) Client-side TensorFlow.js analyzes the webcam feed to detect phones and ensure eye contact during the Face-to-Face interview.
+## 📄 Resume Analysis
+
+- Upload PDF/DOCX resumes
+- Resume parsing
+- Skills extraction
+- Experience extraction
+- Project extraction
+- Education analysis
+- Certification detection
+
+---
+
+## 📊 ATS Resume Checker
+
+- ATS Score
+- Resume Match Percentage
+- Hiring Probability
+- Missing Keywords
+- Missing Skills
+- Resume Formatting Analysis
+- Grammar Review
+- Recruiter Readability Score
+
+---
+
+## 📝 AI Resume Optimizer
+
+- Keywords to improve professional summary
+- Optimize project descriptions
+- ATS keyword enhancement
+
+---
+
+## 💼 Job Description Analysis
+
+- Upload Job Description
+- Resume vs JD Comparison
+- ATS Match Analysis
+- Missing Skill Detection
+- Resume Gap Analysis
+- Interview Readiness Score
+
+---
+
+## 🎤 AI Interview Assistant
+
+- Technical Interview
+- Behavioural Interview
+- Mixed Interview
+- Company-specific Questions
+- Adaptive Follow-up Questions
+- Real-time AI Evaluation
+
+---
+
+## 🎥 Virtual Face-to-Face Interview
+
+- AI-powered interviewer
+- Voice interaction
+- Personalized conversation
+- Real interview simulation
+- Detailed performance evaluation
+
+---
+
+## 🔐 Authentication
+
+- Google Authentication
+- Firebase Authentication
+- Secure Login System
+
+---
