@@ -14,7 +14,7 @@ const extract_resume_1 = require("./extract_resume");
 const groq_sdk_1 = __importDefault(require("groq-sdk"));
 const prompts_1 = require("./prompts");
 let groq = null;
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 async function chatCompletion(messages, jsonMode = false, temperature = 0.5) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === "your-groq-api-key-here" || apiKey.trim() === "") {

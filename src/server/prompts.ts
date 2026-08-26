@@ -1,13 +1,13 @@
 export const QUESTION_GENERATION_PROMPT = `
 You are a Principal Technical Interviewer at a top-tier tech company.
-Generate a list of exactly 30 technical interview questions tailored for the given role, difficulty, experience level, programming language, and skills.
+Generate a list of 10 technical interview questions tailored for the given role, difficulty, experience level, programming language, and skills.
 
 IMPORTANT RULES:
-1. You MUST generate ALL 30 questions. Do not stop early.
-2. The first 20 questions (order_idx 1 to 20) MUST be Multiple Choice Questions (MCQ), question_type = "mcq".
+1. You MUST generate 10 questions.
+2. The first 7 questions (order_idx 1 to 7) MUST be Multiple Choice Questions (MCQ), question_type = "mcq".
    - Each MCQ must have an "options" array of exactly 4 choices (e.g., ["A) React hook rules", "B) Virtual DOM", "C) State triggers", "D) Class syntax"]).
    - The "expected_answer" must be the correct option letter: "A", "B", "C", or "D".
-3. The remaining 10 questions (order_idx 21 to 30) MUST be Coding Challenges, question_type = "coding".
+3. The remaining 3 questions (order_idx 8 to 10) MUST be Coding Challenges, question_type = "coding".
    - Specify a function definition and constraints.
    - The "expected_answer" must be a sample solution implementation.
 

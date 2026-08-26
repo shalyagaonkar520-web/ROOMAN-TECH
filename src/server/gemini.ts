@@ -15,27 +15,27 @@ import {
 } from './prompts';
 
 let groq: Groq | null = null;
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 async function chatCompletion(messages: any[], jsonMode = false, temperature = 0.5) {
   const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey || apiKey === "your-groq-api-key-here" || apiKey.trim() === "") {
-    throw new Error('GROQ_API_KEY is missing.');
+    throw new Error('GROQ_API_KEY is missing. Please set a valid GROQ_API_KEY in your environment configuration.');
   }
 
   if (!groq) {
     groq = new Groq({ apiKey });
   }
 
-  console.log('Step 7: Calling Groq API.');
+  console.log(`Step 7: Calling Groq API using model ${MODEL}.`);
   try {
     const response = await groq.chat.completions.create({
       model: MODEL,
       messages,
       response_format: jsonMode ? { type: 'json_object' } : undefined,
       temperature,
-      max_tokens: 8000,
+      max_tokens: 6000,
     });
     console.log('Step 8: Received Groq response.');
     
@@ -54,7 +54,13 @@ async function chatCompletion(messages: any[], jsonMode = false, temperature = 0
     return content;
   } catch (err: any) {
     console.error('Groq API execution failed:', err);
-    throw new Error(`[Groq API Error] ${err.message}`);
+    let errorDetail = err.message || 'Unknown Groq API error.';
+    if (err.status === 404 || errorDetail.includes('model_not_found')) {
+      errorDetail = `Model '${MODEL}' not found or inaccessible. Please verify GROQ_MODEL in your .env settings.`;
+    } else if (err.status === 401 || errorDetail.includes('invalid_api_key')) {
+      errorDetail = 'Invalid GROQ_API_KEY. Please verify your API key in your .env file.';
+    }
+    throw new Error(`[Groq API Error] ${errorDetail}`);
   }
 }
 
